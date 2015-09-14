@@ -40,14 +40,34 @@ endPlace (MkInterval a b c) = MkPlace (a + b) c
 
 subVect : Vect n a -> (r : Interval n) -> Vect (range r) a
 subVect v (MkInterval a b c) = drop a (take (a + b) v)
-  
-{-
-data Expr (a : String) : Type where
-  Invalid : Expr
-  Num : Nat -> Expr
-  Plus : Expr -> Expr -> Expr
-  Mult : Expr -> Expr -> Expr
 
+PlusMinus : (a : Nat) -> (b : Nat) -> {smaller:LTE a b} -> a + (b - a) = b
+PlusMinus Z     b     {smaller} = replace (minusZeroRight b) Refl
+PlusMinus (S a) Z     {smaller} = absurd smaller
+PlusMinus (S a) (S b) {smaller} = cong {f=S} inductive_hypothesis where
+    inductive_hypothesis = PlusMinus a b {smaller=fromLteSucc smaller}
+
+MinusPlus : (a : Nat) -> (b : Nat) -> {smaller:LTE b a} -> (a - b) + b = a
+MinusPlus a b {smaller} = rewrite plusCommutative (a - b) b in PlusMinus b a {smaller}
+
+bounds : Interval n -> Interval n -> Interval n
+bounds {n} r0 r1 = MkInterval a b c
+  where
+    a : Nat
+    a = min (start r0 r1)
+    c : Nat
+    c = min (remainder r0 r1)
+    b : Nat
+    b = n - c - a
+  
+using (n : Nat, str : Vect n Char)
+  data Expr : Interval n -> Type where
+    Invalid : r -> Expr r
+    Num : r -> Nat -> Expr r
+    Plus : Expr r0 -> Expr r1 -> Expr (bounds r0 r1)
+    Mult : Expr r0 -> Expr r1 -> Expr (bounds r0 r1)
+
+{-
 data Colour : Type where
   Black : Colour
   Red : Colour
@@ -61,7 +81,6 @@ data Parser (a : Type) : Type where
 
 (>>=) : Parser a -> (a -> Parser b) -> Parser b
 MkParser m >>= f =
-
 
 parse : (a : String) -> Colouring a
 -}
