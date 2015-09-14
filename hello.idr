@@ -1,41 +1,78 @@
 module Main
 
--- Stolen from IQuery (but fixed)
+import IQuery
+import IQuery.Elements
+import IQuery.Event
+import Data.Fin
+import Data.Vect
 
-data Element : Type where
-  MkElem : Ptr -> Element
+%default total
 
-data NodeList : Type where
-  MkNodeList : Ptr -> NodeList
+strToVec : (s : String) -> (n : Nat ** Vect n Char)
+strToVec s = (length (unpack s) ** fromList (unpack s))
 
-%inline
-jscall : (fname : String) -> (ty : Type) ->
-          {auto fty : FTy FFI_JS [] ty} -> ty
-jscall fname ty = foreign FFI_JS fname ty
+maxBoundMinus : Fin n -> Fin n
+maxBoundMinus FZ = maxBound
+maxBoundMinus (FS n) = weaken (maxBoundMinus n)
 
-nl_length : NodeList -> JS_IO Int
-nl_length (MkNodeList l) =
-  jscall "%0.length" (Ptr -> JS_IO Int) l
+FinBoundMinus : Fin n -> Type
+FinBoundMinus fn = Fin (finToNat (maxBoundMinus fn))
 
-elemAt : NodeList -> Int -> JS_IO (Maybe Element)
-elemAt (MkNodeList l) i = do
-  if !(nl_length $ MkNodeList l) > i then do
-    ptr <- jscall "%0.item(%1)" (Ptr -> Int -> JS_IO Ptr) l i
-    return (Just $ MkElem ptr)
-  else
-    return Nothing
+data Interval : Nat -> Type where
+  MkInterval : {n : Nat} -> (start : Fin (S n)) -> FinBoundMinus start -> Interval n
 
-query : String -> JS_IO NodeList
-query q = do
-  ptr <- jscall "document.querySelectorAll(%0)" (String -> JS_IO Ptr) q
-  return (MkNodeList ptr)
+start : Interval n -> Nat
+start (MkInterval s _) = finToNat s
 
-setText : Element -> String -> JS_IO ()
-setText (MkElem e) s =
-  jscall "%0.textContent=%1" (Ptr -> String -> JS_IO ()) e s
+range : Interval n -> Nat
+range (MkInterval start len) = finToNat len
+
+FinSmaller : {n : Nat} -> {fn : Fin n} -> LTE (S (finToNat fn)) n
+FinSmaller {n=Z} {fn} = void (FinZAbsurd fn)
+FinSmaller {n=S n} {fn=FZ} = LTESucc LTEZero
+FinSmaller {n=S n} {fn=FS fn} = LTESucc (FinSmaller {n} {fn})
+
+remainder : Interval n -> Nat
+remainder (MkInterval _ len) = finToNat (maxBoundMinus len)
+
+subVect : Vect n a -> (r : Interval n) -> Vect (range r) a
+subVect v (MkInterval start len) = take (finToNat len) (drop (finToNat start) v)
+  
+{-
+data Expr (a : String) : Type where
+  Invalid : Expr
+  Num : Nat -> Expr
+  Plus : Expr -> Expr -> Expr
+  Mult : Expr -> Expr -> Expr
+
+data Colour : Type where
+  Black : Colour
+  Red : Colour
+  Blue : Colour
+
+data Colouring (a : String) : Type where
+  MkColouring : Vect (length a) Colour -> Colouring a
+
+data Parser (a : Type) : Type where
+  MkParser : (String -> Maybe (a, String, String) -> Parser a
+
+(>>=) : Parser a -> (a -> Parser b) -> Parser b
+MkParser m >>= f =
+
+
+parse : (a : String) -> Colouring a
+-}
+
+change_cb : Event -> JS_IO Int
+change_cb _ = do
+  alert "changed"
+  return 0
 
 main : JS_IO ()
 main = do
   nodes <- query "p"
-  Just p <- elemAt nodes 1
-  setText p "Hello?"
+  Just p <- elemAt nodes 0
+  setProperty p "contentEditable" "true"
+  onEvent KeyUp p change_cb
+  onEvent Blur p change_cb
+  --setText p "Hello?"

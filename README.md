@@ -16,3 +16,17 @@ make
 (VIM editor support, assumes Pathogen already installed)
 cd ~/.vim/bundle
 git clone https://github.com/idris-hackers/idris-vim.git
+
+
+Installing required packages:
+
+git clone https://github.com/edkins/iQuery.git
+idris --install iquery.ipkg
+
+
+To build:
+./compile
+
+To test:
+Currently client-side only. Just point your browser at file:///.../index.html
+

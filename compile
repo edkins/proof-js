@@ -1,2 +1,2 @@
 #!/bin/bash
-idris --codegen JavaScript hello.idr -o hello.js
+idris -p iquery --codegen JavaScript hello.idr -o hello.js
