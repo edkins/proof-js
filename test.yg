@@ -1,8 +1,22 @@
+thePos : Global Int : global "thePos".
+theString : Global String : global "theString".
+
 parseTop : IO AST :
   whitespace;
   decls.
 
+lineNumber : IO (Int,Int) :
+  var 1 >> line ->
+  var 1 >> character ->
+  inrange !thePos (i ->
+    increment character;
+    if (elem !theString i == newline) (
+      increment line;
+      character := 1
+    )
+  ).
+
 parser (str : String) : IO AST :
-  setGlobal "theString" str;
-  setGlobal "thePos" 0;
-  parseTop.
+  theString := str;
+  thePos := 0;
+  try parseTop errorDecorator.

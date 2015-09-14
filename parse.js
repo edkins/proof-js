@@ -2,14 +2,20 @@ var theString;
 var thePos;
 
 var operator_table = [
-  {op: '@', dir:'left', optype:'infix'},   // function application. f @ x = f x.
-  {op: '/', dir:'left', optype:'infix'},
-  {op: '*', dir:'left', optype:'infix'},
-  {op: '-', dir:'left', optype:'infix'},
-  {op: '+', dir:'left', optype:'infix'},
-  {op: ';', dir:'left', optype:'infix'},
-  {op: ':', dir:'left', optype:'infix'},
-  {op: '.', dir:'left', optype:'separator'}
+  {op: '@', dir:'left', optype:'infix', level:0},   // function application. f @ x = f x.
+  {op: '!', dir:'left', optype:'infix', level:0},
+  {op: '/', dir:'left', optype:'infix', level:1},
+  {op: '*', dir:'left', optype:'infix', level:1},
+  {op: '-', dir:'left', optype:'infix', level:2},
+  {op: '+', dir:'left', optype:'infix', level:2},
+  {op: '==',dir:'left', optype:'infix', level:3},
+  {op: ':=',dir:'left', optype:'infix', level:4},
+  {op: '->',dir:'right',optype:'infix', level:5},
+  {op: '>>',dir:'right',optype:'infix', level:5},
+  {op: ',', dir:'left', optype:'infix', level:6},
+  {op: ';', dir:'left', optype:'infix', level:7},
+  {op: ':', dir:'left', optype:'infix', level:8},
+  {op: '.', dir:'left', optype:'separator', level:9}
 ];
 
 function Unit()
@@ -71,6 +77,37 @@ function ast_str(obj, target)
 function printAST(obj)
 {
   console.log(ast_str(obj, 1000));
+}
+
+function spaces(level)
+{
+  var result = '';
+  for (var i = 0; i < level; i++)
+    result += ' ';
+  return result;
+}
+
+function ast_long(obj, level)
+{
+  if (obj.type == 'name')
+    console.log(spaces(level) + obj.name);
+  else if (obj.type == 'number')
+    console.log(spaces(level) + obj.number);
+  else if (obj.type == 'quoted')
+    console.log(spaces(level) + '"' + obj.str + '"');
+  else if (obj.type == 'tree')
+  {
+    ast_long(obj.lhs, level + 1);
+    console.log(spaces(level) + operator_table[obj.opindex].op);
+    ast_long(obj.rhs, level + 1);
+  }
+  else
+    console.log(spaces(level) + '<' + obj.type + '>');
+}
+
+function printASTLong(obj)
+{
+  ast_long(obj, 0);
 }
 
 function eof()
@@ -168,7 +205,7 @@ function parenthesised()
 
 function isSymbolChar(ch)
 {
-  return "!#$%&*+-./:;<=>?@\\^|~".indexOf(ch) != -1;
+  return "!#$%&*+,-./:;<=>?@\\^|~".indexOf(ch) != -1;
 }
 
 function lookup_op(op)
@@ -246,8 +283,11 @@ function term()
 
 function group_right(left_op_index, right_op_index)
 {
-  return left_op_index > right_op_index ||
-    (left_op_index == right_op_index && operator_table[right_op_index] == 'right');
+  var left_level = operator_table[left_op_index].level;
+  var right_level = operator_table[right_op_index].level;
+  var dir = operator_table[right_op_index].dir;
+  return left_level > right_level ||
+    (left_level == right_level && dir == 'right');
 }
 
 function expr()
@@ -329,4 +369,4 @@ function parser(str)
 
 exports.parser = parser;
 exports.printAST = printAST;
-
+exports.printASTLong = printASTLong;
