@@ -1,44 +1,77 @@
-var theString = 'main = return 4';
-var thePos = 0;
+var theString;
+var thePos;
 
-var Nil = {type: 'nil'};
+var operator_table = [
+  {op: '@', dir:'left', optype:'infix'},   // function application. f @ x = f x.
+  {op: '/', dir:'left', optype:'infix'},
+  {op: '*', dir:'left', optype:'infix'},
+  {op: '-', dir:'left', optype:'infix'},
+  {op: '+', dir:'left', optype:'infix'},
+  {op: ';', dir:'left', optype:'infix'},
+  {op: ':', dir:'left', optype:'infix'},
+  {op: '.', dir:'left', optype:'separator'}
+];
+
 function Unit()
 {
   return {type: 'unit'};
 }
 function Name(n)
 {
-  return {type: 'name', name:n};
+  return {type: 'name', name:n, infix:false};
 }
 function Num(n)
 {
-  return {type: 'number', number:n};
+  return {type: 'number', number:n, infix:false};
 }
-function Cons(x, xs)
+function Quoted(s)
 {
-  return {type: 'cons', hd: x, tl: xs};
+  return {type: 'quoted', str:s, infix:false};
 }
 function Decl(n, e)
 {
   return {type: 'decl', name: n, expr: e};
 }
-function Apply(f, x)
+function Infix(opindex)
 {
-  return {type: 'apply', func: f, arg: x};
+  return {type: 'infix', opindex: opindex, infix: true};
+}
+function Tree(lhs, opindex, rhs)
+{
+  return {type: 'tree', lhs:lhs, opindex:opindex, rhs:rhs, infix: false};
 }
 
-function ast_str(obj)
+function ast_str(obj, target)
 {
-  if (obj.type == 'unit') return '()';
-  else if (obj.type == 'name') return '`' + obj.name + '`';
-  else if (obj.type == 'number') return '#' + obj.number + '#';
-  else if (obj.type == 'cons') return '(' + ast_str(obj.hd) + '::' + ast_str(obj.tl) + ')';
-  else if (obj.type == 'nil') return 'nil';
-  else if (obj.type == 'decl') return ast_str(obj.name) + ' := ' + ast_str(obj.expr);
-  else if (obj.type == 'apply') return '(' + ast_str(obj.func) + ' ' + ast_str(obj.arg) + ')';
-  else return '<' + obj.type + '>';
+  var level = -1;
+  var result;
+  if (obj.type == 'name') result = obj.name;
+  else if (obj.type == 'number') result = obj.number;
+  else if (obj.type == 'quoted') result = '"' + obj.str + '"';
+  else if (obj.type == 'tree')
+  {
+    level = obj.opindex;
+    var lhs_level = level;
+    if (operator_table[obj.opindex].dir == 'left') lhs_level++;
+    var rhs_level = level;
+    if (operator_table[obj.opindex].dir == 'right') rhs_level++;
+    var op = operator_table[obj.opindex].op;
+    if (op == ':') op = '\n  :';
+    if (op == '.') op = '\n.';
+    if (op == '@') op = ' ';
+    result = ast_str(obj.lhs,lhs_level) + op + ast_str(obj.rhs,rhs_level);
+  }
+  else result = '<' + obj.type + '>';
+
+  if (target <= level)
+    result = '(' + result + ')';
+  return result;
 }
 
+function printAST(obj)
+{
+  console.log(ast_str(obj, 1000));
+}
 
 function eof()
 {
@@ -50,9 +83,14 @@ function peekChar()
   return theString.substr(thePos,1);
 }
 
+function isWhitespace(ch)
+{
+  return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
+}
+
 function whitespace()
 {
-  while (!eof() && peekChar() == ' ')
+  while (!eof() && isWhitespace(peekChar()))
   {
     thePos++;
   }
@@ -128,11 +166,70 @@ function parenthesised()
   return e;
 }
 
+function isSymbolChar(ch)
+{
+  return "!#$%&*+-./:;<=>?@\\^|~".indexOf(ch) != -1;
+}
+
+function lookup_op(op)
+{
+  for (var i = 0; i < operator_table.length; i++)
+  {
+    if (operator_table[i].op == op)
+      return Infix(i);
+  }
+  throw 'No such infix operator: "' + op + '"';
+}
+
+function infix()
+{
+  var n = '';
+  var index;
+  while (true)
+  {
+    if (eof()) break;
+    var ch = peekChar();
+    if (isSymbolChar(ch))
+    {
+      n += ch;
+      thePos++;
+    }
+    else break;
+  }
+  if (n == '') throw 'Expected <operator>';
+  whitespace();
+  return lookup_op(n);
+}
+
+function quoted()
+{
+  var s = '';
+  if (eof() || peekChar() != '"') throw 'Expected <quoted>';
+  thePos++;
+  while (true)
+  {
+    if (eof()) break;
+    var ch = peekChar();
+    if (ch == '"') break;
+    if (ch == '\\') throw 'Cannot handle escaped characters yet';
+    s += ch;
+    thePos++;
+  }
+  if (eof() || peekChar()  != '"') throw 'Expected <closing double quote>';
+  thePos++;
+  whitespace();
+  return Quoted(s);
+}
+
 function term()
 {
   if (eof()) throw 'Expected <expression>';
   var ch = peekChar();
-  if (ch == '(')
+  if (ch == '"')
+  {
+    return quoted();
+  }
+  else if (ch == '(')
   {
     return parenthesised();
   }
@@ -140,57 +237,96 @@ function term()
   {
     return number();
   }
+  if (isSymbolChar(ch))
+  {
+    return infix();
+  }
   return name();
+}
+
+function group_right(left_op_index, right_op_index)
+{
+  return left_op_index > right_op_index ||
+    (left_op_index == right_op_index && operator_table[right_op_index] == 'right');
 }
 
 function expr()
 {
   var e = term();
+  var stack = [e];
   while (!closing())
   {
     var start = thePos;
     var t = term();
+    var rhs;
     if (start == thePos) throw 'Should have advanced';
-    e = Apply(e, t);
+
+    if (t.infix && operator_table[t.opindex].optype == 'separator' && closing())
+    {
+      /* Nothing to do. Emptiness is permitted after the final separator */
+    }
+    else
+    {
+      if (t.infix)
+      {
+        rhs = term();
+      }
+      else
+      {
+        rhs = t;
+        t = lookup_op('@');
+      }
+
+      while (stack.length > 1 && !group_right(stack[stack.length - 2].opindex, t.opindex))
+      {
+        var b = stack.pop();
+        var op = stack.pop();
+        var a = stack.pop();
+        stack.push(Tree(a, op.opindex, b));
+      }
+
+      stack.push(t);
+      stack.push(rhs);
+    }
   }
-  return e;
-}
-
-function decl()
-{
-  var n = name();
-  symbol('=');
-  var e = expr();
-  return Decl(n, e);
-}
-
-function decls()
-{
-  if (eof())
-    return Nil;
-  else
+  while (stack.length > 1)
   {
-    var d = decl();
-    var ds = decls();
-    return Cons(d, ds);
+    var b = stack.pop();
+    var op = stack.pop();
+    var a = stack.pop();
+    stack.push(Tree(a, op.opindex, b));
   }
+  return stack[0];
 }
 
 function parseTop()
 {
   whitespace();
-  return decls();
+  return expr();
 }
 
-function main()
+function parser(str)
 {
+  theString = str;
+  thePos = 0;
   try {
-    var ast = parseTop();
-    console.log(ast_str(ast));
+    return parseTop();
   } catch (e) {
-    console.log(e + ' at position ' + thePos);
+    var line = 1;
+    var character = 1;
+    for (var i = 0; i < thePos; i++)
+    {
+      character++;
+      if (theString.substr(i, 1) == '\n')
+      {
+        line++;
+        character = 1;
+      }
+    }
+    throw e + ' on line ' + line + ', character ' + character;
   }
 }
 
-main();
+exports.parser = parser;
+exports.printAST = printAST;
 

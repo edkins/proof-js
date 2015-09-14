@@ -1,0 +1,8 @@
+parseTop : IO AST :
+  whitespace;
+  decls.
+
+parser (str : String) : IO AST :
+  setGlobal "theString" str;
+  setGlobal "thePos" 0;
+  parseTop.
