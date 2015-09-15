@@ -1,4 +1,12 @@
-div#editor {
-  border: solid black 1px;
-  font-family: monospace;
+p.row {
+}
+span.annotation {
+  border: solid green 2px;
+  border-radius: 5px;
+  padding: 5px;
+}
+span.content {
+  border: solid green 2px;
+  border-radius: 5px;
+  padding: 5px;
 }

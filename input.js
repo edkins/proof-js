@@ -1,5 +1,6 @@
 var status = {};
 var text = [];
+var nextElementId = 1;
 
 function check(i)
 {
@@ -14,38 +15,29 @@ function check(i)
   return { proved:proved, recheck:function(){}};
 }
 
-function change()
+function change(i)
 {
-  var e = document.getElementById('editor');
-  text = e.innerHTML.split('<br>');
-  for (var i = 0; i < text.length; i++)
+  var e = document.getElementById('content' + i);
+  var an = document.getElementById('annotation' + i);
+  text = e.textContent;
+  if (text.substr(0,1) == 'a')
   {
-    var line = text[i];
-    if (status[line] == undefined)
-    {
-      status[line] = check(i);
-    }
-    else
-    {
-      status[line].recheck();
-    }
+    an.textContent = '!';
   }
-  var j = 0;
-  var leftAn = document.getElementById('left-annotations');
-
-  while (leftAn.firstChild)
+  else
   {
-    leftAn.removeChild(leftAn.firstChild);
+    an.textContent = '?';
   }
+}
 
-  for (var i = 0; i < e.childNodes.length; i++)
+function handleKey(e,i)
+{
+  if (e.keyCode == 13)
   {
-    var n = e.childNodes[i];
-    if (n instanceof HTMLBRElement)
-    {
-      var y = n.getBoundingClientRect().top;
-      var an = document.createTextNode('?');
-      leftAn.appendChild(an);
-    }
+    e.preventDefault();
+
+    var el = document.getElementById('row' + i);
+    var newel = el.cloneNode(true);
+    el.parentNode.insertBefore(newel, el)
   }
 }
