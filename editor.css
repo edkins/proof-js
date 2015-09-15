@@ -1,12 +1,12 @@
-p.row {
-}
-span.annotation {
+div#editor {
   border: solid green 2px;
-  border-radius: 5px;
-  padding: 5px;
+  border-radius: 8px;
+  padding:5px 5px 5px 50px;
+  font-family: monospace;
+  background-image: linear-gradient(to right, white, white 45px, green 45px, green 48px, white 48px);
 }
-span.content {
-  border: solid green 2px;
-  border-radius: 5px;
-  padding: 5px;
+div#annotations span {
+  background-color: #ffc000;
+  font-size: small;
+  position: absolute;
 }

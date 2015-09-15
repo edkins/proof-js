@@ -1,43 +1,33 @@
-var status = {};
-var text = [];
-var nextElementId = 1;
-
-function check(i)
-{
-  var line = text[i];
-  var proved;
-
-  if (line.substr[0] == 'a')
-    proved = true;
-  else
-    proved = false;
-
-  return { proved:proved, recheck:function(){}};
-}
-
 function change(i)
 {
-  var e = document.getElementById('content' + i);
-  var an = document.getElementById('annotation' + i);
-  text = e.textContent;
-  if (text.substr(0,1) == 'a')
+  var e = document.getElementById('editor');
+  var range = document.createRange();
+  var dump = document.getElementById('annotations');
+
+  while (dump.firstChild)
   {
-    an.textContent = '!';
+    dump.removeChild(dump.firstChild);
   }
-  else
+
+  e.normalize();
+  for (var n = e.firstChild; n != null; n = n.nextSibling)
   {
-    an.textContent = '?';
+    if (n instanceof Text)
+    {
+      var str = n.textContent.trim();
+      if (str != '')
+      {
+        range.setStartBefore(n);
+        range.setEndAfter(n);
+        var rects = range.getClientRects();
+
+        var an = document.createElement('span');
+        an.style.left = rects[0].left - 25;
+        an.style.top = rects[0].top;
+        an.textContent = str.length;
+        dump.appendChild(an);
+      }
+    }
   }
 }
 
-function handleKey(e,i)
-{
-  if (e.keyCode == 13)
-  {
-    e.preventDefault();
-
-    var el = document.getElementById('row' + i);
-    var newel = el.cloneNode(true);
-    el.parentNode.insertBefore(newel, el)
-  }
-}

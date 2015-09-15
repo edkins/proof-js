@@ -5,11 +5,7 @@
   <script src="input.js" language="JavaScript"></script>
 </head>
 <body>
-<div id="editor">
-  <p class="row" id="row0">
-    <span class="annotation" id="annotation0" width=42>?</span>
-    <span class="content" id="content0" contentEditable="true" onKeyDown="handleKey(event,0)" onKeyUp="change(0)"></span>
-  </span>
-</div>
+  <div id="editor" contentEditable="true" onKeyUp="change()">Hello</div>
+  <div id="annotations"></div>
 </body>
 </html>
