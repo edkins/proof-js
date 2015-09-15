@@ -1,12 +1,20 @@
 div#editor {
   border: solid green 2px;
   border-radius: 8px;
-  padding:5px 5px 5px 50px;
+  padding:5px 5px 5px 60px;
   font-family: monospace;
-  background-image: linear-gradient(to right, white, white 45px, green 45px, green 48px, white 48px);
+  background-image: linear-gradient(to right, white, white 55px, green 55px, green 58px, white 58px);
 }
 div#annotations span {
-  background-color: #ffc000;
   font-size: small;
   position: absolute;
+}
+span.import {
+  background-color: #00c0ff;
+}
+span.editing {
+  background-color: #ffc000;
+}
+span.unknown {
+  background-color: #ffc000;
 }

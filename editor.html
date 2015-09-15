@@ -4,8 +4,8 @@
   <link rel="stylesheet" type="text/css" href="editor.css"></link>
   <script src="input.js" language="JavaScript"></script>
 </head>
-<body>
-  <div id="editor" contentEditable="true" onKeyUp="change()">Hello</div>
+<body onLoad="handleKeyDown()">
+  <div id="editor" contentEditable="true" onKeyDown="handleKeyDown()">Hello</div>
   <div id="annotations"></div>
 </body>
 </html>
