@@ -32,6 +32,15 @@ function IntroducedName(name)
   this.names = {};
   this.probable_type = undefined;
 }
+function Special()
+{
+}
+function Operator(probable_type, typecheck, eval)
+{
+  this.probable_type = probable_type;
+  this.typecheck = typecheck;
+  this.eval = eval;
+}
 
 function is_defined(obj)
 {

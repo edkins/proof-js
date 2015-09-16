@@ -102,8 +102,9 @@ function makeSuggestions(db, section)
 function suggested(suggestion, section)
 {
   var el = document.getElementById(section);
-  el.insertBefore(document.createTextNode(suggestion), el.lastChild);
-  el.insertBefore(document.createElement('br'), el.lastChild);
+  el.appendChild(document.createTextNode(suggestion));
+  el.appendChild(document.createElement('br'));
+  el.appendChild(document.createElement('br'));
   registerChange(section);
 }
 

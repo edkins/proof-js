@@ -8,21 +8,21 @@ var pkg_logic = {
     'false' : new Boolean(false)
   },
   operators: {
-    '=' : {
-      probable_type: Boolean,
-      typecheck: function(a, b) { return is_number(a) && is_number(b) || is_boolean(a) && is_boolean(b); },
-      eval: function(a, b) { return new Boolean(a.valueOf() == b.valueOf()); }
-    },
-    '&&' : {
-      probable_type: Boolean,
-      typecheck: function(a, b) { return is_boolean(a) && is_boolean(b); },
-      eval: function(a, b) { return new Boolean(a.valueOf() && b.valueOf()); }
-    },
-    '||' : {
-      probable_type: Boolean,
-      typecheck: function(a, b) { return is_boolean(a) && is_boolean(b); },
-      eval: function(a, b) { return new Boolean(a.valueOf() || b.valueOf()); }
-    }
+    '=' : new Operator(
+      Boolean,
+      function(a, b) { return is_number(a) && is_number(b) || is_boolean(a) && is_boolean(b); },
+      function(a, b) { return new Boolean(a.valueOf() == b.valueOf()); }
+    ),
+    '&&' : new Operator(
+      Boolean,
+      function(a, b) { return is_boolean(a) && is_boolean(b); },
+      function(a, b) { return new Boolean(a.valueOf() && b.valueOf()); }
+    ),
+    '||' : new Operator(
+      Boolean,
+      function(a, b) { return is_boolean(a) && is_boolean(b); },
+      function(a, b) { return new Boolean(a.valueOf() || b.valueOf()); }
+    )
   }
 };
 
@@ -30,45 +30,45 @@ var pkg_math = {
   name: 'mathematics',
   alternative_names: ['math', 'maths'],
   depends: ['logic'],
-  specials: {'<number>':true},
+  specials: {'<number>':new Special()},
   names: {},
   operators: {
-    '+' : {
-      probable_type: Number,
-      typecheck: function(a, b) { return is_number(a) && is_number(b); },
-      eval: function(a, b) { return new Number(a + b); }
-    },
-    '-' : {
-      probable_type: Number,
-      typecheck: function(a, b) { return is_number(a) && is_number(b); },
-      eval: function(a, b) { return new Number(a - b); }
-    },
-    '*' : {
-      probable_type: Number,
-      typecheck: function(a, b) { return is_number(a) && is_number(b); },
-      eval: function(a, b) { return new Number(a * b); }
-    },
+    '+' : new Operator(
+      Number,
+      function(a, b) { return is_number(a) && is_number(b); },
+      function(a, b) { return new Number(a + b); }
+    ),
+    '-' : new Operator(
+      Number,
+      function(a, b) { return is_number(a) && is_number(b); },
+      function(a, b) { return new Number(a - b); }
+    ),
+    '*' : new Operator(
+      Number,
+      function(a, b) { return is_number(a) && is_number(b); },
+      function(a, b) { return new Number(a * b); }
+    ),
 
-    '<' : {
-      probable_type: Boolean,
-      typecheck: function(a, b) { return is_number(a) && is_number(b); },
-      eval: function(a, b) { return new Boolean(a < b); }
-    },
-    '<=' : {
-      probable_type: Boolean,
-      typecheck: function(a, b) { return is_number(a) && is_number(b); },
-      eval: function(a, b) { return new Boolean(a <= b); }
-    },
-    '>' : {
-      probable_type: Boolean,
-      typecheck: function(a, b) { return is_number(a) && is_number(b); },
-      eval: function(a, b) { return new Boolean(a > b); }
-    },
-    '>=' : {
-      probable_type: Boolean,
-      typecheck: function(a, b) { return is_number(a) && is_number(b); },
-      eval: function(a, b) { return new Boolean(a >= b); }
-    },
+    '<' : new Operator(
+      Boolean,
+      function(a, b) { return is_number(a) && is_number(b); },
+      function(a, b) { return new Boolean(a < b); }
+    ),
+    '<=' : new Operator(
+      Boolean,
+      function(a, b) { return is_number(a) && is_number(b); },
+      function(a, b) { return new Boolean(a <= b); }
+    ),
+    '>' : new Operator(
+      Boolean,
+      function(a, b) { return is_number(a) && is_number(b); },
+      function(a, b) { return new Boolean(a > b); }
+    ),
+    '>=' : new Operator(
+      Boolean,
+      function(a, b) { return is_number(a) && is_number(b); },
+      function(a, b) { return new Boolean(a >= b); }
+    ),
   }
 };
 
