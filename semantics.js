@@ -84,9 +84,9 @@ function perform_op_defined(op, lhs, rhs)
     return new Boolean(lhs < rhs);
   else if (op == '<=' && is_number(lhs) && is_number(rhs))
     return new Boolean(lhs <= rhs);
-  else if (op == '<' && is_number(lhs) && is_number(rhs))
+  else if (op == '>' && is_number(lhs) && is_number(rhs))
     return new Boolean(lhs > rhs);
-  else if (op == '<=' && is_number(lhs) && is_number(rhs))
+  else if (op == '>=' && is_number(lhs) && is_number(rhs))
     return new Boolean(lhs >= rhs);
   
   else if (op == '+' && is_number(lhs) && is_number(rhs))

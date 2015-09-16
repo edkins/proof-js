@@ -1,15 +1,14 @@
-function importPackage(db, pkg)
+function importPackage(db, pkg, remark)
 {
   if (!db.usesPackage(pkg))
   {
-    db.packageNames[pkg.name] = 'importing';
+    db.packageNames[pkg.name] = remark;
     for (var i = 0; i < pkg.depends.length; i++)
     {
       var dep = findPackage(pkg.depends[i]);
       if (dep == undefined) throw 'Missing package dependency: ' + pkg.depends[i] + ' from ' + pkg.name;
-      importPackage(db, dep);
+      importPackage(db, dep, remark);
     }
-    db.packageNames[pkg.name] = true;
   }
 }
 
@@ -20,12 +19,12 @@ function processFreshName(db, name)
   {
     if (db.usesPackage(pkg))
     {
-      return ['already','already'];
+      return ['already','already','Part of ' + db.packageNames[pkg.name]];
     }
     else
     {
-      importPackage(db, pkg);
-      return ['import','import'];
+      importPackage(db, pkg, name);
+      return ['import','import',undefined];
     }
   }
   return undefined;
@@ -36,30 +35,43 @@ function processDefinition(db, name, value)
   if (name in db.env)
     throw "Wasn't expecting name already to be in database (" + name + ")";
   db.env[name] = value;
-  return ['def','definition'];
+  return ['def','definition',undefined];
 }
 
 function processHypothesis(db, obj)
 {
   if (is_definitely_true(obj))
-    return ['already','already'];
+    return ['already','already',undefined];
   else if (is_definitely_false(obj))
-    return ['false','false'];
-  return ['hyp','hypothesis'];
+    return ['false','false',undefined];
+
+  var remark = undefined;
+  for (var name in obj.names)
+  {
+    if (!(name in db.env))
+    {
+      db.env[name] = new FreshName(name);
+      if (remark == undefined)
+        remark = 'Introducing ' + name;
+      else
+        remark += ', ' + name;
+    }
+  }
+  return ['hyp','hypothesis',remark];
 }
 
 function processDeduction(db, obj)
 {
   if (is_definitely_true(obj))
-    return ['true','true'];
+    return ['true','true',undefined];
   else if (is_definitely_false(obj))
-    return ['false','false'];
+    return ['false','false',undefined];
   return null;
 }
 
 function processExpression(db, obj)
 {
-  return ['expr','expression'];
+  return ['expr','expression',obj.toString()];
 }
 
 function processObj(db, section, obj)
@@ -87,14 +99,14 @@ function process(db, section, str)
 {
   if (str == '')
   {
-    return ['','blank'];
+    return [undefined,undefined,undefined];
   }
   else
   {
     try {
       var ast = parser(str);
     } catch(e) {
-      return ['?','unknown'];
+      return ['?','unknown',undefined];
     }
     var obj = semantics(db.env, ast);
     var line = processObj(db, section, obj);
@@ -102,7 +114,7 @@ function process(db, section, str)
     if (line != undefined) return line;
   }
 
-  return ['?','unknown'];
+  return ['?','unknown',undefined];
 }
 
 function DB()
@@ -123,7 +135,7 @@ DB.prototype.usesPackage = function(pkg)
 DB.prototype.pushString = function(section, str)
 {
   var line = process(this, section, str);
-  this.lines.push({str:str, annotationString:line[0], annotationClass:line[1]});
+  this.lines.push({str:str, annotationString:line[0], annotationClass:line[1], remarkString:line[2]});
 };
 DB.prototype.annotationClass = function(i)
 {
@@ -132,6 +144,10 @@ DB.prototype.annotationClass = function(i)
 DB.prototype.annotationString = function(i)
 {
   return this.lines[i].annotationString;
+}
+DB.prototype.remarkString = function(i)
+{
+  return this.lines[i].remarkString;
 }
 DB.prototype.lineCount = function()
 {

@@ -17,28 +17,31 @@ div#annotations span {
   position: absolute;
 }
 span.already {
-  background-color: #c0c0c0;
+  background-color: #ccc;
 }
 span.definition {
-  background-color: #8080ff;
+  background-color: #88f;
 }
 span.expression {
-  background-color: #c000c0;
+  background-color: #c0c;
 }
 span.false {
-  background-color: #ff0000;
+  background-color: #f00;
 }
 span.hypothesis {
-  background-color: #0000ff;
+  background-color: #00f;
 }
 span.import {
-  background-color: #00c0ff;
+  background-color: #0cf;
 }
 span.true {
-  background-color: #00c000;
+  background-color: #0c0;
 }
 span.unknown {
-  background-color: #ffc000;
+  background-color: #fc0;
+}
+span.remark {
+  color: #aaa;
 }
 h1 {
   font-family: sans-serif;

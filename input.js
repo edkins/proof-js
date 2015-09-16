@@ -16,7 +16,8 @@ function handleKeyDown(section)
 
 function handle_section_node(db, positions, section, n)
 {
-  if (n instanceof Text || n instanceof HTMLDivElement)
+  if (n instanceof HTMLDivElement) n = n.firstChild;
+  if (n instanceof Text)
   {
     var str = n.textContent.trim();
     if (str != '')
@@ -24,10 +25,10 @@ function handle_section_node(db, positions, section, n)
       db.pushString(section, str);
       
       var range = document.createRange();
-      range.setStartBefore(n);
-      range.setEndAfter(n);
+      range.setStart(n,0);
+      range.setEnd(n,str.length);
       var rects = range.getClientRects();
-      positions.push([rects[0].left - 55, rects[0].top]);
+      positions.push([rects[0].left - 55, rects[0].top, 100 + rects[0].right]);
       if (positions.length != db.lineCount())
       {
         throw 'Internal error: db lines and positions got out of sync';
@@ -47,13 +48,23 @@ function makeAnnotations(db, positions)
   for (var i = 0; i < positions.length; i++)
   {
     var str = db.annotationString(i);
-    if (str != '')
+    if (str != undefined)
     {
       var an = document.createElement('span');
       an.style.left = positions[i][0];
       an.style.top = positions[i][1];
-      an.textContent = db.annotationString(i);
+      an.textContent = str;
       an.className = db.annotationClass(i);
+      ans.appendChild(an);
+    }
+    str = db.remarkString(i);
+    if (str != undefined)
+    {
+      var an = document.createElement('span');
+      an.style.left = positions[i][2];
+      an.style.top = positions[i][1];
+      an.textContent = str;
+      an.className = 'remark';
       ans.appendChild(an);
     }
   }

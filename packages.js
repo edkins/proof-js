@@ -6,8 +6,8 @@ var pkg_logic = {
 };
 
 var pkg_math = {
-  name: 'math',
-  alternative_names: ['maths', 'mathematics'],
+  name: 'mathematics',
+  alternative_names: ['math', 'maths'],
   depends: ['logic'],
   contents: []
 };
