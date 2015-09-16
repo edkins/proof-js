@@ -21,10 +21,31 @@ function TypeError()
   this.names = {};
   this.probable_type = undefined;
 }
+function UndefinedSyntax(msg)
+{
+  this.names = {};
+  this.probable_type = undefined;
+  this.msg = msg;
+}
+function IntroducedName(name)
+{
+  this.names = {};
+  this.probable_type = undefined;
+}
 
 function is_defined(obj)
 {
-  return !(obj instanceof FreshName) && !(obj instanceof Undefined) && !(obj instanceof TypeError) && !(obj instanceof Definition);
+  return !(obj instanceof FreshName) &&
+    !(obj instanceof IntroducedName) &&
+    !(obj instanceof Undefined) &&
+    !(obj instanceof TypeError) &&
+    !(obj instanceof Definition) &&
+    !(obj instanceof UndefinedSyntax);
+}
+
+function is_malformed(obj)
+{
+  return obj instanceof TypeError || obj instanceof UndefinedSyntax;
 }
 
 function is_fresh_name(obj)
@@ -63,46 +84,24 @@ function is_definitely_false(obj)
   return is_defined(obj) && is_boolean(obj) && !obj.valueOf();
 }
 
-var probable_optypes = {
-  '=' : Boolean,
-  '<' : Boolean,
-  '<=' : Boolean,
-  '>' : Boolean,
-  '>=' : Boolean,
-  '+' : Number,
-  '-' : Number,
-  '*' : Number,
-  '&&' : Boolean,
-  '||' : Boolean
-};
-
-function perform_op_defined(op, lhs, rhs)
+function probableOptype(env, op)
 {
-  if (op == '=' && is_number(lhs) && is_number(rhs))
-    return new Boolean(lhs.valueOf() == rhs.valueOf());
-  else if (op == '<' && is_number(lhs) && is_number(rhs))
-    return new Boolean(lhs < rhs);
-  else if (op == '<=' && is_number(lhs) && is_number(rhs))
-    return new Boolean(lhs <= rhs);
-  else if (op == '>' && is_number(lhs) && is_number(rhs))
-    return new Boolean(lhs > rhs);
-  else if (op == '>=' && is_number(lhs) && is_number(rhs))
-    return new Boolean(lhs >= rhs);
-  
-  else if (op == '+' && is_number(lhs) && is_number(rhs))
-    return new Number(lhs + rhs);
-  else if (op == '-' && is_number(lhs) && is_number(rhs))
-    return new Number(lhs - rhs);
-  else if (op == '*' && is_number(lhs) && is_number(rhs))
-    return new Number(lhs * rhs);
+  if (!(op in env)) return undefined;
+  return env[op].probable_type;
+}
 
-  else if (op == '&&' && is_boolean(lhs) && is_boolean(rhs))
-    return new Boolean(lhs && rhs);
-  else if (op == '||' && is_boolean(lhs) && is_boolean(rhs))
-    return new Boolean(lhs || rhs);
-
-  else
+function perform_op_defined(env, op, lhs, rhs)
+{
+  if (!is_defined(lhs)) throw 'lhs not defined';
+  if (!is_defined(rhs)) throw 'rhs not defined';
+  if (!(op in env)) {
+    var names = {};
+    names[op] = true;
+    return new Undefined(names,undefined);
+  }
+  if (!env[op].typecheck(lhs, rhs))
     return new TypeError();
+  return env[op].eval(lhs, rhs);
 }
 
 function join_undefined(lhs, rhs, probable_type)
@@ -110,6 +109,9 @@ function join_undefined(lhs, rhs, probable_type)
   var lhs_names = {};
   var rhs_names = {};
   var names = {};
+
+  if (is_malformed(lhs)) return lhs;
+  if (is_malformed(rhs)) return rhs;
 
   if (!is_defined(lhs)) lhs_names = lhs.names;
   if (!is_defined(rhs)) rhs_names = rhs.names;
@@ -121,11 +123,11 @@ function join_undefined(lhs, rhs, probable_type)
   return new Undefined(names, probable_type);
 }
 
-function perform_op(op, lhs, rhs)
+function perform_op(env, op, lhs, rhs)
 {
   if (is_defined(lhs) && is_defined(rhs))
   {
-    return perform_op_defined(op, lhs, rhs);
+    return perform_op_defined(env, op, lhs, rhs);
   }
   else if (op == '=' && is_fresh_name(lhs) && is_defined(rhs))
   {
@@ -133,7 +135,7 @@ function perform_op(op, lhs, rhs)
   }
   else
   {
-    return join_undefined(lhs, rhs, probable_optypes[op]);
+    return join_undefined(lhs, rhs, probableOptype(env, op));
   }
 }
 
@@ -148,17 +150,23 @@ function semantics(env, ast)
   }
   else if (ast.type == 'number')
   {
-    return new Number(ast.number);
+    if ('<number>' in env)
+      return new Number(ast.number);
+    else
+      return new UndefinedSyntax('<number>');
   }
   else if (ast.type == 'quoted')
   {
-    return ast.quoted;
+    if ('<quoted>' in env)
+      return ast.quoted;
+    else
+      return new UndefinedSyntax('<quoted>');
   }
   else if (ast.type == 'tree')
   {
     var lhs = semantics(env, ast.lhs);
     var rhs = semantics(env, ast.rhs);
-    return perform_op(ast.op, lhs, rhs);
+    return perform_op(env, ast.op, lhs, rhs);
   }
   else
   {

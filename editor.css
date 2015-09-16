@@ -25,6 +25,9 @@ span.definition {
 span.expression {
   background-color: #c0c;
 }
+span.fail {
+  background-color: #f00;
+}
 span.false {
   background-color: #f00;
 }

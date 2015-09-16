@@ -1,8 +1,30 @@
+function importPackageContents(db, pkg)
+{
+  for (var op in pkg.operators)
+  {
+    if (op in db.env) throw 'Already defined: ' + op;
+    db.env[op] = pkg.operators[op];
+  }
+
+  for (var name in pkg.names)
+  {
+    if (name in db.env) throw 'Already defined: ' + name;
+    db.env[name] = pkg.names[name];
+  }
+
+  for (var special in pkg.specials)
+  {
+    if (special in db.env) throw 'Already defined: ' + special;
+    db.env[special] = pkg.specials[special];
+  }
+}
+
 function importPackage(db, pkg, remark)
 {
   if (!db.usesPackage(pkg))
   {
     db.packageNames[pkg.name] = remark;
+    importPackageContents(db, pkg);
     for (var i = 0; i < pkg.depends.length; i++)
     {
       var dep = findPackage(pkg.depends[i]);
@@ -23,8 +45,12 @@ function processFreshName(db, name)
     }
     else
     {
-      importPackage(db, pkg, name);
-      return ['import','import',undefined];
+      try {
+        importPackage(db, pkg, name);
+        return ['import','import',undefined];
+      } catch(e) {
+        return ['fail','fail',e];
+      }
     }
   }
   return undefined;
@@ -50,7 +76,7 @@ function processHypothesis(db, obj)
   {
     if (!(name in db.env))
     {
-      db.env[name] = new FreshName(name);
+      db.env[name] = new IntroducedName(name);
       if (remark == undefined)
         remark = 'Introducing ' + name;
       else
