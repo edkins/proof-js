@@ -85,23 +85,36 @@ function makeAnnotations(db, positions)
 
 function makeSuggestions(db, section)
 {
+  var el = document.getElementById('suggest_' + section);
   var sugs = suggest(db, section);
-  var innerHTML = '';
+
+  while (el.firstChild)
+    el.removeChild(el.firstChild);
+
   if (sugs.length > 0)
   {
     innerHTML = 'e.g. ';
     for (var i = 0; i < sugs.length; i++)
     {
-      if (i > 0) innerHTML += ', ';
-      innerHTML += '<span class="suggestion" onclick="suggested(\'' + sugs[i] + '\',\'' + section + '\')">' + sugs[i] + '</span>';
+      if (i == 0)
+        el.appendChild(document.createTextNode('e.g. '));
+      else
+        el.appendChild(document.createTextNode(', '));
+
+      var span = document.createElement('span');
+      span.className = 'suggestion';
+      span.textContent = sugs[i];
+      span.addEventListener('click', function() {suggested(this.textContent, section);});
+      el.appendChild(span);
     }
   }
-  document.getElementById('suggest_' + section).innerHTML = innerHTML;
 }
 
 function suggested(suggestion, section)
 {
   var el = document.getElementById(section);
+  if (el.lastChild instanceof HTMLBRElement)
+    el.removeChild(el.lastChild);
   el.appendChild(document.createTextNode(suggestion));
   el.appendChild(document.createElement('br'));
   el.appendChild(document.createElement('br'));

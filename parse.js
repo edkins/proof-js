@@ -154,7 +154,7 @@ function name()
   {
     if (eof()) break;
     var ch = peekChar();
-    if (ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch >= '0' && ch <= '9' || ch == '_')
+    if (ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch >= '0' && ch <= '9' || ch == '_' || ch == "'")
     {
       n += ch;
       thePos++;
