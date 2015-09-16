@@ -3,6 +3,7 @@ div.editor {
   border-radius: 8px;
   padding:5px 5px 5px 60px;
   font-family: monospace;
+  white-space: pre-wrap;
 }
 div#assume {
   background-image: linear-gradient(to right, white, white 55px, blue 55px, blue 57px, white 57px);
@@ -16,7 +17,18 @@ div#annotations span {
   font-size: small;
   position: absolute;
 }
+h1 {
+  font-family: sans-serif;
+  font-weight: bold;
+  color: grey;
+}
+
 span.already {
+  background-color: #ccc;
+}
+span.can_deduce {
+  color: blue;
+  cursor: pointer;
   background-color: #ccc;
 }
 span.definition {
@@ -32,7 +44,7 @@ span.false {
   background-color: #f00;
 }
 span.hypothesis {
-  background-color: #00f;
+  background-color: #0ec;
 }
 span.import {
   background-color: #0cf;
@@ -43,11 +55,11 @@ span.true {
 span.unknown {
   background-color: #fc0;
 }
+
 span.remark {
   color: #aaa;
 }
-h1 {
-  font-family: sans-serif;
-  font-weight: bold;
-  color: grey;
+span.suggestion {
+  color: blue;
+  cursor: pointer;
 }

@@ -10,18 +10,18 @@ var pkg_logic = {
   operators: {
     '=' : {
       probable_type: Boolean,
-      typecheck: function(a, b) { return is_number(a) && is_number(b); },
+      typecheck: function(a, b) { return is_number(a) && is_number(b) || is_boolean(a) && is_boolean(b); },
       eval: function(a, b) { return new Boolean(a.valueOf() == b.valueOf()); }
     },
     '&&' : {
       probable_type: Boolean,
       typecheck: function(a, b) { return is_boolean(a) && is_boolean(b); },
-      eval: function(a, b) { return new Boolean(a && b); }
+      eval: function(a, b) { return new Boolean(a.valueOf() && b.valueOf()); }
     },
     '||' : {
       probable_type: Boolean,
       typecheck: function(a, b) { return is_boolean(a) && is_boolean(b); },
-      eval: function(a, b) { return new Boolean(a || b); }
+      eval: function(a, b) { return new Boolean(a.valueOf() || b.valueOf()); }
     }
   }
 };

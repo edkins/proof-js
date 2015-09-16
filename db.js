@@ -67,7 +67,7 @@ function processDefinition(db, name, value)
 function processHypothesis(db, obj)
 {
   if (is_definitely_true(obj))
-    return ['already','already',undefined];
+    return ['already','can_deduce',undefined];
   else if (is_definitely_false(obj))
     return ['false','false',undefined];
 

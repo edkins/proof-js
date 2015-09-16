@@ -28,13 +28,21 @@ function handle_section_node(db, positions, section, n)
       range.setStart(n,0);
       range.setEnd(n,str.length);
       var rects = range.getClientRects();
-      positions.push([rects[0].left - 55, rects[0].top, 100 + rects[0].right]);
+      positions.push([rects[0].left - 55, rects[0].top, 100 + rects[0].right, n]);
       if (positions.length != db.lineCount())
       {
         throw 'Internal error: db lines and positions got out of sync';
       }
     }
   }
+}
+
+function move_to_deduce(node)
+{
+  var str = node.textContent;
+  node.parentNode.removeChild(node);
+  registerChange('assume');
+  suggested(str, 'deduce');
 }
 
 function makeAnnotations(db, positions)
@@ -53,8 +61,13 @@ function makeAnnotations(db, positions)
       var an = document.createElement('span');
       an.style.left = positions[i][0];
       an.style.top = positions[i][1];
-      an.textContent = str;
       an.className = db.annotationClass(i);
+      an.textContent = str;
+      an.relatedNode = positions[i][3];
+      if (an.className == 'can_deduce')
+      {
+        an.addEventListener('click', function() { move_to_deduce(this.relatedNode); });
+      }
       ans.appendChild(an);
     }
     str = db.remarkString(i);
@@ -80,7 +93,7 @@ function makeSuggestions(db, section)
     for (var i = 0; i < sugs.length; i++)
     {
       if (i > 0) innerHTML += ', ';
-      innerHTML += '<a href="#" onclick="suggested(\'' + sugs[i] + '\',\'' + section + '\')">' + sugs[i] + '</a>';
+      innerHTML += '<span class="suggestion" onclick="suggested(\'' + sugs[i] + '\',\'' + section + '\')">' + sugs[i] + '</span>';
     }
   }
   document.getElementById('suggest_' + section).innerHTML = innerHTML;
@@ -88,7 +101,9 @@ function makeSuggestions(db, section)
 
 function suggested(suggestion, section)
 {
-  document.getElementById(section).innerHTML += '<br>' + suggestion;
+  var el = document.getElementById(section);
+  el.insertBefore(document.createTextNode(suggestion), el.lastChild);
+  el.insertBefore(document.createElement('br'), el.lastChild);
   registerChange(section);
 }
 
