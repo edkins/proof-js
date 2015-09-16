@@ -2,10 +2,18 @@
 <meta charset="US-ASCII">
 <head>
   <link rel="stylesheet" type="text/css" href="editor.css"></link>
+  <script src="packages.js" language="JavaScript"></script>
+  <script src="db.js" language="JavaScript"></script>
+  <script src="suggest.js" language="JavaScript"></script>
   <script src="input.js" language="JavaScript"></script>
 </head>
 <body onLoad="handleKeyDown()">
-  <div id="editor" contentEditable="true" onKeyDown="handleKeyDown()">Hello</div>
+  <h1>Assume:</h1>
+  <div class="editor" id="assume" contentEditable="true" onKeyDown="handleKeyDown('assume')">&nbsp;</div>
+  <div class="suggestions" id="suggest_assume"></div>
+  <h1>Deduce:</h1>
+  <div class="editor" id="deduce" contentEditable="true" onKeyDown="handleKeyDown('deduce')">&nbsp;</div>
+  <div class="suggestions" id="suggest_deduce"></div>
   <div id="annotations"></div>
 </body>
 </html>

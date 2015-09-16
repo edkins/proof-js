@@ -1,9 +1,16 @@
-div#editor {
-  border: solid green 2px;
+div.editor {
+  border: solid 2px;
   border-radius: 8px;
   padding:5px 5px 5px 60px;
   font-family: monospace;
+}
+div#assume {
+  background-image: linear-gradient(to right, white, white 55px, blue 55px, blue 58px, white 58px);
+  border-color: blue;
+}
+div#deduce {
   background-image: linear-gradient(to right, white, white 55px, green 55px, green 58px, white 58px);
+  border-color: green;
 }
 div#annotations span {
   font-size: small;
@@ -12,9 +19,14 @@ div#annotations span {
 span.import {
   background-color: #00c0ff;
 }
-span.editing {
-  background-color: #ffc000;
-}
 span.unknown {
   background-color: #ffc000;
+}
+span.already {
+  background-color: #c0c0c0;
+}
+h1 {
+  font-family: sans-serif;
+  font-weight: bold;
+  color: grey;
 }

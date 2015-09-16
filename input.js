@@ -1,20 +1,6 @@
 var change_queued = false;
 
-function makeSenseOf(str)
-{
-  if (str == 'mathematics')
-    return 'import';
-  else
-    return '?';
-}
-
-var classes = {
-  'import' : 'import',
-  '?' : 'unknown',
-  '...' : 'editing'
-};
-
-function handleKeyDown()
+function registerChange(section)
 {
   if (!change_queued)
   {
@@ -23,45 +9,110 @@ function handleKeyDown()
   }
 }
 
-function change()
+function handleKeyDown(section)
 {
-  var e = document.getElementById('editor');
-  var range = document.createRange();
-  var dump = [];
+  registerChange(section);
+}
 
-  e.normalize();
-  for (var n = e.firstChild; n != null; n = n.nextSibling)
+function handle_section_node(db, positions, section, n)
+{
+  if (n instanceof Text || n instanceof HTMLDivElement)
   {
-    if (n instanceof Text || n instanceof HTMLDivElement)
+    var str = n.textContent.trim();
+    if (str != '')
     {
-      var str = n.textContent.trim();
-      if (str != '')
+      db.pushString(section, str);
+      
+      var range = document.createRange();
+      range.setStartBefore(n);
+      range.setEndAfter(n);
+      var rects = range.getClientRects();
+      positions.push([rects[0].left - 55, rects[0].top]);
+      if (positions.length != db.lineCount())
       {
-        range.setStartBefore(n);
-        range.setEndAfter(n);
-        var rects = range.getClientRects();
-
-        var an = document.createElement('span');
-        an.style.left = rects[0].left - 55;
-        an.style.top = rects[0].top;
-        var anstr = makeSenseOf(str);
-        an.textContent = anstr;
-        an.className = classes[an.textContent];
-        dump.push(an);
+        throw 'Internal error: db lines and positions got out of sync';
       }
     }
   }
+}
 
+function makeAnnotations(db, positions)
+{
   var ans = document.getElementById('annotations');
   while (ans.firstChild)
   {
     ans.removeChild(ans.firstChild);
   }
-  for (var i = 0; i < dump.length; i++)
-  {
-    ans.appendChild(dump[i]);
-  }
 
-  change_queued = false;
+  for (var i = 0; i < positions.length; i++)
+  {
+    var str = db.annotationString(i);
+    if (str != '')
+    {
+      var an = document.createElement('span');
+      an.style.left = positions[i][0];
+      an.style.top = positions[i][1];
+      an.textContent = db.annotationString(i);
+      an.className = db.annotationClass(i);
+      ans.appendChild(an);
+    }
+  }
+}
+
+function makeSuggestions(db, section)
+{
+  var sugs = suggest(db, section);
+  var innerHTML = '';
+  if (sugs.length > 0)
+  {
+    innerHTML = 'e.g. ';
+    for (var i = 0; i < sugs.length; i++)
+    {
+      if (i > 0) innerHTML += ', ';
+      innerHTML += '<a href="#" onclick="suggested(\'' + sugs[i] + '\',\'' + section + '\')">' + sugs[i] + '</a>';
+    }
+  }
+  document.getElementById('suggest_' + section).innerHTML = innerHTML;
+}
+
+function suggested(suggestion, section)
+{
+  document.getElementById(section).innerHTML += '<br>' + suggestion;
+  registerChange(section);
+}
+
+function processSection(db, positions, section)
+{
+  var e = document.getElementById(section);
+  e.normalize();
+  for (var n = e.firstChild; n != null; n = n.nextSibling)
+  {
+    handle_section_node(db, positions, section, n);
+  }
+  makeSuggestions(db, section);
+}
+
+function change()
+{
+  try
+  {
+    var db = new DB();
+    var positions = [];
+
+    processSection(db, positions, 'assume');
+    processSection(db, positions, 'deduce');
+    e = document.getElementById('deduce');
+    e.normalize();
+    for (var n = e.firstChild; n != null; n = n.nextSibling)
+    {
+      handle_section_node(dump, 'deduce', n);
+    }
+
+    makeAnnotations(db, positions);
+  }
+  finally
+  {
+    change_queued = false;
+  }
 }
 
