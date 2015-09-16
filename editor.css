@@ -16,14 +16,29 @@ div#annotations span {
   font-size: small;
   position: absolute;
 }
+span.already {
+  background-color: #c0c0c0;
+}
+span.definition {
+  background-color: #8080ff;
+}
+span.expression {
+  background-color: #c000c0;
+}
+span.false {
+  background-color: #ff0000;
+}
+span.hypothesis {
+  background-color: #0000ff;
+}
 span.import {
   background-color: #00c0ff;
 }
+span.true {
+  background-color: #00c000;
+}
 span.unknown {
   background-color: #ffc000;
-}
-span.already {
-  background-color: #c0c0c0;
 }
 h1 {
   font-family: sans-serif;

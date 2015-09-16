@@ -8,13 +8,19 @@ var operator_table = [
   {op: '*', dir:'left', optype:'infix', level:1},
   {op: '-', dir:'left', optype:'infix', level:2},
   {op: '+', dir:'left', optype:'infix', level:2},
-  {op: '==',dir:'left', optype:'infix', level:3},
+  {op: '<', dir:'left', optype:'infix', level:3},
+  {op: '<=',dir:'left', optype:'infix', level:3},
+  {op: '>', dir:'left', optype:'infix', level:3},
+  {op: '>=',dir:'left', optype:'infix', level:3},
+  {op: '=', dir:'left', optype:'infix', level:3},
   {op: ':=',dir:'left', optype:'infix', level:4},
-  {op: '->',dir:'right',optype:'infix', level:5},
-  {op: '>>',dir:'right',optype:'infix', level:5},
-  {op: ',', dir:'left', optype:'infix', level:6},
-  {op: ';', dir:'left', optype:'infix', level:7},
-  {op: ':', dir:'left', optype:'infix', level:8},
+  {op: '&&',dir:'left', optype:'infix', level:5},
+  {op: '||',dir:'left', optype:'infix', level:5},
+  {op: '->',dir:'right',optype:'infix', level:6},
+  {op: '>>',dir:'right',optype:'infix', level:6},
+  {op: ',', dir:'left', optype:'infix', level:7},
+  {op: ';', dir:'left', optype:'infix', level:8},
+  {op: ':', dir:'left', optype:'infix', level:9},
   {op: '.', dir:'left', optype:'separator', level:9}
 ];
 
@@ -44,7 +50,7 @@ function Infix(opindex)
 }
 function Tree(lhs, opindex, rhs)
 {
-  return {type: 'tree', lhs:lhs, opindex:opindex, rhs:rhs, infix: false};
+  return {type: 'tree', lhs:lhs, op:operator_table[opindex].op, opindex:opindex, rhs:rhs, infix: false};
 }
 
 function ast_str(obj, target)
@@ -367,6 +373,8 @@ function parser(str)
   }
 }
 
+/*
 exports.parser = parser;
 exports.printAST = printAST;
 exports.printASTLong = printASTLong;
+*/
