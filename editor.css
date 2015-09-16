@@ -5,11 +5,11 @@ div.editor {
   font-family: monospace;
 }
 div#assume {
-  background-image: linear-gradient(to right, white, white 55px, blue 55px, blue 58px, white 58px);
+  background-image: linear-gradient(to right, white, white 55px, blue 55px, blue 57px, white 57px);
   border-color: blue;
 }
 div#deduce {
-  background-image: linear-gradient(to right, white, white 55px, green 55px, green 58px, white 58px);
+  background-image: linear-gradient(to right, white, white 55px, green 55px, green 57px, white 57px);
   border-color: green;
 }
 div#annotations span {

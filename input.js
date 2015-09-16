@@ -101,12 +101,6 @@ function change()
 
     processSection(db, positions, 'assume');
     processSection(db, positions, 'deduce');
-    e = document.getElementById('deduce');
-    e.normalize();
-    for (var n = e.firstChild; n != null; n = n.nextSibling)
-    {
-      handle_section_node(dump, 'deduce', n);
-    }
 
     makeAnnotations(db, positions);
   }
