@@ -191,14 +191,14 @@ function suggest_misc(db, section)
   if (section == 'assume')
   {
     str = suggest_def_binop(db, result_string);
-    if (str != undefined)
+    if (str != undefined && str.indexOf('undefined') == -1)
     {
       result.push(str);
       result_string += str + ', ';
     }
 
     str = suggest_def_bool(db, result_string);
-    if (str != undefined)
+    if (str != undefined && str.indexOf('undefined') == -1)
     {
       result.push(str);
       result_string += str + ', ';
@@ -208,7 +208,7 @@ function suggest_misc(db, section)
   if (section == 'deduce')
   {
     str = suggest_binop(db, result_string);
-    if (str != undefined)
+    if (str != undefined && str.indexOf('undefined') == -1)
     {
       result.push(str);
       result_string += str + ', ';
@@ -216,14 +216,14 @@ function suggest_misc(db, section)
   }
 
   str = suggest_rel(db, result_string);
-  if (str != undefined)
+  if (str != undefined && str.indexOf('undefined') == -1)
   {
     result.push(str);
     result_string += str + ', ';
   }
 
   str = suggest_bool_op(db, result_string);
-  if (str != undefined)
+  if (str != undefined && str.indexOf('undefined') == -1)
   {
     result.push(str);
     result_string += str + ', ';
