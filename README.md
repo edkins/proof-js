@@ -1,32 +1,10 @@
 # proof-js
-A language with dependent types which compiles to JavaScript
 
-
-I installed the following:
-
-git clone git://github.com/idris-lang/Idris-dev.git
-cd Idris-dev
-cabal sandbox init
-cabal update
-cabal install --only-dependencies
-
-echo "CI = true" > custom.mk
-make
-
-(VIM editor support, assumes Pathogen already installed)
-cd ~/.vim/bundle
-git clone https://github.com/idris-hackers/idris-vim.git
-
-
-Installing required packages:
-
-git clone https://github.com/edkins/iQuery.git
-idris --install iquery.ipkg
-
-
-To build:
-./compile
+A mockup of a JavaScript-based proof checking environment.
 
 To test:
-Currently client-side only. Just point your browser at file:///.../index.html
+Currently client-side only. Just point your browser at file:///.../editor.html
 
+Follow the on-screen suggestions and see what you can get it to do.
+
+Not that there's currently no actual logical deduction going on - it's essentially a glorified calculator. But you can define variables, evaluate expressions and introduce "hypotheses" which are currently ignored.
