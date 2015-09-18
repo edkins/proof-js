@@ -6,18 +6,18 @@
 </head>
 <body>
   <div class="main">
-    <div class="slice" id="goal">
+    <p><div class="slice" id="goal">
       <h2>
         Proposition to be proved:
       </h2>
-      <button type="button" class="new"
+      <button type="button" class="big-new"
         data-vis="vanish" 
         data-generate="true"
         onclick="newBox(event)">
         +
       </button>
-    </div>
-    <div class="slice" id="intermediate">
+    </div></p>
+    <p><div class="slice" id="intermediate">
       <button type="button" data-vis="vanish" onclick="newBox(event)">
         <span class="new">+</span>
         Add intermediate steps
@@ -31,17 +31,24 @@
         onclick="newBox(event)">
         +
       </button>
-    </div>
-    <div class="slice" id="premises">
+    </div></p>
+    <p><div class="slice" id="premises">
       <h2>
         Premises:
       </h2>
-      <button type="button" class="new"
+      <button type="button" class="big-new"
+        data-vis="vanish"
         data-generate="true"
         onclick="newBox(event)">
         +
       </button>
-    </div>
+      <button type="button" class="new"
+        data-vis="appear" style="display:none"
+        data-generate="true"
+        onclick="newBox(event)">
+        +
+      </button>
+    </div></p>
   </div>
 </body>
 </html>
