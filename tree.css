@@ -3,24 +3,24 @@ h2 {
   font-size: medium;
   font-weight: normal;
 }
-body {
+div.main {
   text-align: center;
 }
 div.slice {
-  display: inline-block;
+  display: block;
   background: #ddd;
-  height: 150px;
+  padding: 0px 30px 0px 30px;
 }
 div.box {
   text-align: left;
   vertical-align: top;
   background: white;
   display: inline-block;
-  width:130px;
+  width:250px;
   height:130px;
   margin:10px;
 }
-div.slice button {
+button.new {
   vertical-align: top;
   font-family: sans-serif;
   font-size: 30px;

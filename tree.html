@@ -5,23 +5,43 @@
   <script src="tree.js" language="JavaScript"></script>
 </head>
 <body>
-  <h2>Proposition to be proved:</h2>
-  <div class="slice" id="goal">
-    <button type="button" class="new-vanish" onclick="newBox(event)">
-      +
-    </button>
-  </div>
-  <h2>Intermediate steps:</h2>
-  <div class="slice" id="intermediate">
-    <button type="button" class="new" onclick="newBox(event)">
-      +
-    </button>
-  </div>
-  <h2>Premises:</h2>
-  <div class="slice" id="premises">
-    <button type="button" class="new" onclick="newBox(event)">
-      +
-    </button>
+  <div class="main">
+    <div class="slice" id="goal">
+      <h2>
+        Proposition to be proved:
+      </h2>
+      <button type="button" class="new"
+        data-vis="vanish" 
+        data-generate="true"
+        onclick="newBox(event)">
+        +
+      </button>
+    </div>
+    <div class="slice" id="intermediate">
+      <button type="button" data-vis="vanish" onclick="newBox(event)">
+        <span class="new">+</span>
+        Add intermediate steps
+      </button>
+      <h2 data-vis="appear" style="display:none">
+        Intermediate steps:
+      </h2>
+      <button type="button" class="new"
+        data-vis="appear" style="display:none"
+        data-generate="true"
+        onclick="newBox(event)">
+        +
+      </button>
+    </div>
+    <div class="slice" id="premises">
+      <h2>
+        Premises:
+      </h2>
+      <button type="button" class="new"
+        data-generate="true"
+        onclick="newBox(event)">
+        +
+      </button>
+    </div>
   </div>
 </body>
 </html>
