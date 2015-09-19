@@ -3,8 +3,33 @@ h2 {
   font-size: medium;
   font-weight: normal;
 }
+body {
+  display: table;
+  width: 100%;
+}
 div.main {
   text-align: center;
+  vertical-align: top;
+}
+div.fix {
+  background: #ddd;
+  text-align: left;
+  padding: 5px;
+}
+span.fixedit {
+  background: white;
+  padding: 5px;
+}
+div.sidebar {
+  float: right;
+  vertical-align: top;
+  width: 200px;
+}
+div.sidebar select {
+  width: 180px;
+}
+optgroup {
+  font-style: normal;
 }
 div.slice {
   display: inline-block;
@@ -37,11 +62,16 @@ button.new {
   color: green;
   height: 150px;
 }
-div.box button {
+button.close {
   color: red;
   height: 17px;
   font-size: 10px;
 }
-div.box div {
+div.titlebar {
+  background: #008;
+  color: white;
+  cursor: pointer;
+}
+div.edit {
   height: 100px;
 }

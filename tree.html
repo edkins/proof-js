@@ -2,9 +2,37 @@
 <meta charset="US-ASCII">
 <head>
   <link rel="stylesheet" type="text/css" href="tree.css"></link>
+  <script src="parse.js" language="JavaScript"></script>
+  <script src="logic.js" language="JavaScript"></script>
   <script src="tree.js" language="JavaScript"></script>
 </head>
 <body>
+  <div class="fix">
+    <p>
+      Fix
+      <span contentEditable="true" class="fixedit" onkeyup="onKeyUp(event)">
+        &nbsp;
+      </span>
+    </p>
+  </div>
+  <div class="sidebar">
+    <select size=30>
+      <optgroup label="Logic">
+        <option>Modus ponens</option>
+      </optgroup>
+      <optgroup label="=">
+        <option>Reflexive</option>
+        <option>Symmetric</option>
+        <option>Transitive</option>
+      </optgroup>
+      <optgroup label="+">
+        <option>Left 0</option>
+        <option>Right 0</option>
+        <option>Commutative</option>
+        <option>Associative</option>
+      </optgroup>
+    </select>
+  </div>
   <div class="main">
     <p><div class="slice" id="goal">
       <h2>
@@ -12,21 +40,6 @@
       </h2>
       <button type="button" class="big-new"
         data-vis="vanish" 
-        data-generate="true"
-        onclick="newBox(event)">
-        +
-      </button>
-    </div></p>
-    <p><div class="slice" id="intermediate">
-      <button type="button" data-vis="vanish" onclick="newBox(event)">
-        <span class="new">+</span>
-        Add intermediate steps
-      </button>
-      <h2 data-vis="appear" style="display:none">
-        Intermediate steps:
-      </h2>
-      <button type="button" class="new"
-        data-vis="appear" style="display:none"
         data-generate="true"
         onclick="newBox(event)">
         +
