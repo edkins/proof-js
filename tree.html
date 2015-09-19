@@ -16,22 +16,15 @@
     </p>
   </div>
   <div class="sidebar">
-    <select size=30>
-      <optgroup label="Logic">
-        <option>Modus ponens</option>
-      </optgroup>
-      <optgroup label="=">
-        <option>Reflexive</option>
-        <option>Symmetric</option>
-        <option>Transitive</option>
-      </optgroup>
-      <optgroup label="+">
-        <option>Left 0</option>
-        <option>Right 0</option>
-        <option>Commutative</option>
-        <option>Associative</option>
-      </optgroup>
-    </select>
+    <p>
+      <button type="button" onclick="rule('induction')">Induction</button>
+    </p>
+    <p>
+      <button type="button" onclick="rule('plus_0_left')">0 +</button>
+    </p>
+    <p>
+      <button type="button" onclick="rule('plus_S_left')">S x +</button>
+    </p>
   </div>
   <div class="main">
     <p><div class="slice" id="goal">
@@ -41,7 +34,7 @@
       <button type="button" class="big-new"
         data-vis="vanish" 
         data-generate="true"
-        onclick="newBox(event)">
+        onclick="newEmptyBox(event)">
         +
       </button>
     </div></p>
@@ -52,13 +45,13 @@
       <button type="button" class="big-new"
         data-vis="vanish"
         data-generate="true"
-        onclick="newBox(event)">
+        onclick="newEmptyBox(event)">
         +
       </button>
       <button type="button" class="new"
         data-vis="appear" style="display:none"
         data-generate="true"
-        onclick="newBox(event)">
+        onclick="newEmptyBox(event)">
         +
       </button>
     </div></p>

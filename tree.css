@@ -24,9 +24,14 @@ div.sidebar {
   float: right;
   vertical-align: top;
   width: 200px;
+  height: 600px;
 }
-div.sidebar select {
+div.sidebar button {
   width: 180px;
+  font-size: large;
+}
+div.sidebar p {
+  margin: 0px;
 }
 optgroup {
   font-style: normal;

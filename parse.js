@@ -224,6 +224,11 @@ function lookup_op(op)
   throw 'No such infix operator: "' + op + '"';
 }
 
+function binop(op, lhs, rhs)
+{
+  return Tree(lhs, lookup_op(op).opindex, rhs);
+}
+
 function infix()
 {
   var n = '';

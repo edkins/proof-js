@@ -28,7 +28,7 @@ function closeBox(e)
   }
 }
 
-function onKeyUp(event)
+function getFixedVars()
 {
   var fix_edit = document.getElementsByClassName('fixedit')[0];
   var fixed_var_list = fix_edit.textContent.split(',');
@@ -37,6 +37,12 @@ function onKeyUp(event)
   {
     fixed_vars[fixed_var_list[i].trim()] = true;
   }
+  return fixed_vars;
+}
+
+function refreshAnnotations()
+{
+  var fixed_vars = getFixedVars();
 
   var boxes = document.getElementsByClassName('box');
   for (var i = 0; i < boxes.length; i++)
@@ -58,11 +64,13 @@ function onKeyUp(event)
   }
 }
 
-function newBox(e)
+function onKeyUp(event)
 {
-  var el = e.target;
-  while (el.className != 'slice') el = el.parentNode;
+  refreshAnnotations();
+}
 
+function newBox(el, text)
+{
   var buttons = el.getElementsByTagName('*');
   var generator = undefined;
   for (var i = 0; i < buttons.length; i++)
@@ -96,6 +104,7 @@ function newBox(e)
   edit.className = 'edit';
   edit.contentEditable = true;
   edit.addEventListener('keyup', onKeyUp);
+  edit.textContent = text;
   box.appendChild(edit);
 
   el.insertBefore(box, generator);
@@ -108,3 +117,47 @@ function newBox(e)
       buttons[i].style.removeProperty('display');
   }
 }
+
+function newEmptyBox(e)
+{
+  var el = e.target;
+  while (el.className != 'slice') el = el.parentNode;
+
+  newBox(el, '');
+}
+
+function newPremise(text)
+{
+  var el = document.getElementById('premises');
+  newBox(el, text);
+}
+
+function getGoal()
+{
+  var el = document.getElementById('goal');
+  var box = el.getElementsByClassName('box')[0];
+  if (box == undefined) return undefined;
+
+  return box.getElementsByClassName('edit')[0].textContent;
+}
+
+function rule(r)
+{
+  var goal = getGoal();
+  if (goal == undefined) return;
+
+  var fixed_vars = getFixedVars();
+  try
+  {
+    var premises = applyRuleBackwards(r, goal, fixed_vars);
+    for (var i = 0; i < premises.length; i++)
+    {
+      newPremise(premises[i]);
+    }
+  } catch (e) {
+    alert(e);
+  } finally {
+    refreshAnnotations();
+  }
+}
+
