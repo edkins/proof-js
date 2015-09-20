@@ -1,12 +1,171 @@
+var animating = false;
+
 function Deduction(text, vars, premises)
 {
   this.text = text;
   this.vars = vars;
   this.premises = premises;
+  if (this.text == undefined)
+    this.complete = 0.0;
+  else
+    this.complete = 1.0;
+  this.hover = false;
+  this.svg_rect = undefined;
+  this.svg_text = undefined;
 }
 
 var root = new Deduction(undefined, [], []);
 var current = root;
+
+function animateSvg(r)
+{
+  var changed = false;
+  var inflate = r.text != undefined || r.hover;
+  if (!inflate && r.complete > 0.0)
+  {
+    r.complete = Math.max(0.0, r.complete - 0.125);
+    changed = true;
+  }
+  if (inflate && r.complete < 1.0)
+  {
+    r.complete = Math.min(1.0, r.complete + 0.125);
+    changed = true;
+  }
+
+  if (changed)
+  {
+    redoSvgFor(r);
+  }
+  
+  for (var i = 0; i < r.premises; i++)
+  {
+    var subchanged = animateSvg(r.premises[i]);
+    changed = changed | subchanged;
+  }
+  return changed;
+}
+
+function svg(type)
+{
+ var NS='http://www.w3.org/2000/svg';
+ return document.createElementNS(NS,type);
+}
+
+function removeSvg()
+{
+  var tree = document.getElementById('tree');
+  while (tree.firstChild)
+    tree.removeChild(tree.firstChild);
+}
+
+function makeSvg()
+{
+  removeSvg();
+
+  var tree = document.getElementById('tree');
+  
+  makeSvgFor(root);
+}
+
+function clickRect(event)
+{
+  var node = event.target.modelNode;
+  if (node.text == undefined)
+  {
+    node.text = '';
+    restartAnimation();
+  }
+}
+
+function hoverRect(event)
+{
+  var node = event.target.modelNode;
+  node.hover = true;
+  restartAnimation();
+}
+
+function unhoverRect(event)
+{
+  var node = event.target.modelNode;
+  node.hover = false;
+  restartAnimation();
+}
+
+function rgb(r,g,b)
+{
+  return 'rgb(' + Math.floor(255 * r) + ',' + Math.floor(255 * g) + ',' + Math.floor(255 * b) + ')';
+}
+
+function redoSvgFor(r)
+{
+  var rect = r.svg_rect;
+  var text = r.svg_text;
+  if (rect == undefined) return;
+  if (text == undefined) return;
+
+  var hw = 60 + 60 * r.complete;
+  rect.setAttribute('x', 200 - hw);
+  rect.setAttribute('y', 40);
+  rect.setAttribute('width', 2 * hw);
+  rect.setAttribute('height', 120);
+  rect.setAttribute('rx', 60 - 50 * r.complete);
+  rect.setAttribute('ry', 60 - 50 * r.complete);
+  rect.setAttribute('fill', 'white');
+  rect.setAttribute('stroke', 'blue');
+  rect.setAttribute('stroke-width', '4px');
+  if (r.text == undefined && r.complete == 0.0)
+    rect.setAttribute('stroke-dasharray', '16px, 16px');
+  else
+    rect.removeAttribute('stroke-dasharray');
+
+  text.textContent = '?';
+  text.setAttribute('fill', rgb(r.complete, r.complete, r.complete));
+}
+
+function makeSvgFor(r)
+{
+  var rect = svg('rect');
+  r.svg_rect = rect;
+  rect.setAttribute('cursor', 'text');
+  rect.addEventListener('click', clickRect);
+  rect.addEventListener('mouseover', hoverRect);
+  rect.addEventListener('mouseout', unhoverRect);
+  rect.modelNode = r;
+  tree.appendChild(rect);
+
+  var text = svg('text');
+  r.svg_text = text;
+  text.setAttribute('x', 200);
+  text.setAttribute('y', 100);
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('dominant-baseline', 'middle');
+  text.setAttribute('font-size', '30');
+  text.setAttribute('font-family', 'sans-serif');
+  text.addEventListener('mouseover', hoverRect);
+  text.addEventListener('mouseout', unhoverRect);
+  text.modelNode = r;
+  tree.appendChild(text);
+
+  redoSvgFor(r);
+}
+
+function animTimeout()
+{
+  animating = animateSvg(root);
+  if (animating)
+  {
+    window.setTimeout(animTimeout, 0.02);
+  }
+}
+
+function restartAnimation()
+{
+  if (!animating)
+  {
+    animating = true;
+    window.setTimeout(animTimeout, 0.02);
+  }
+}
 
 function closeGoal(e)
 {
