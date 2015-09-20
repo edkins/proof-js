@@ -1,6 +1,6 @@
 var animating = false;
 
-function Deduction(text, vars, premises)
+function Deduction(text, vars, premises, x, y)
 {
   this.text = text;
   this.vars = vars;
@@ -10,11 +10,13 @@ function Deduction(text, vars, premises)
   else
     this.complete = 1.0;
   this.hover = false;
+  this.x = x;
+  this.y = y;
   this.svg_rect = undefined;
   this.svg_text = undefined;
 }
 
-var root = new Deduction('', [], []);
+var root = new Deduction('', [], [], 500, 300);
 var current = root;
 var selectedNode = undefined;
 
@@ -40,10 +42,10 @@ function animateSvg(r)
     r.needsRedraw = false;
   }
   
-  for (var i = 0; i < r.premises; i++)
+  for (var i = 0; i < r.premises.length; i++)
   {
     var subchanged = animateSvg(r.premises[i]);
-    changed = changed | subchanged;
+    changed = changed || subchanged;
   }
   return changed;
 }
@@ -121,7 +123,7 @@ function unhoverRect(event)
 
 function keyDown(event)
 {
-  if (event.keyCode == 8)
+  if (event.keyCode == 8 || event.keyCode == 32)
   {
     event.preventDefault();
     keyPress(event);
@@ -148,6 +150,13 @@ function keyPress(event)
   else
     selectedNode.text += key;
   selectedNode.needsRedraw = true;
+
+  if (selectedNode == root && selectedNode.text != '')
+  {
+    root = new Deduction('',[],[selectedNode],selectedNode.x,selectedNode.y - 130);
+    makeSvgFor(root);
+  }
+
   restartAnimation();
 }
 
@@ -162,8 +171,9 @@ function redoSvgFor(r)
   var text = r.svg_text;
   if (rect == undefined) return;
   if (text == undefined) return;
-  var x = 200;
-  var y = 100;
+  var x = r.x;
+  var y = r.y;
+  if (r.x == undefined || r.y == undefined) return;
 
   var hw = 60 + 60 * r.complete;
   var hh = 60;
@@ -197,10 +207,13 @@ function redoSvgFor(r)
   if (r == selectedNode)
   {
     var cursor = document.getElementById('cursor');
-    cursor.setAttribute('x1', x);
-    cursor.setAttribute('y1', y - 10);
-    cursor.setAttribute('x2', x);
-    cursor.setAttribute('y2', y + 10);
+    var cx = x + text.getComputedTextLength() / 2;
+    var cy = y;
+    if (r.text.substr(r.text.length-1,1) == ' ') cx += 8;
+    cursor.setAttribute('x1', cx);
+    cursor.setAttribute('y1', cy - 20);
+    cursor.setAttribute('x2', cx);
+    cursor.setAttribute('y2', cy + 15);
     cursor.setAttribute('visibility', 'visible');
   }
 }
