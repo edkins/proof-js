@@ -5,7 +5,7 @@ function Deduction(text, vars, premises)
   this.text = text;
   this.vars = vars;
   this.premises = premises;
-  if (this.text == undefined)
+  if (this.text == '')
     this.complete = 0.0;
   else
     this.complete = 1.0;
@@ -14,13 +14,14 @@ function Deduction(text, vars, premises)
   this.svg_text = undefined;
 }
 
-var root = new Deduction(undefined, [], []);
+var root = new Deduction('', [], []);
 var current = root;
+var selectedNode = undefined;
 
 function animateSvg(r)
 {
   var changed = false;
-  var inflate = r.text != undefined || r.hover;
+  var inflate = r.text != '' || r.hover || r == selectedNode;
   if (!inflate && r.complete > 0.0)
   {
     r.complete = Math.max(0.0, r.complete - 0.125);
@@ -31,10 +32,12 @@ function animateSvg(r)
     r.complete = Math.min(1.0, r.complete + 0.125);
     changed = true;
   }
+  if (r.needsRedraw) changed = true;
 
   if (changed)
   {
     redoSvgFor(r);
+    r.needsRedraw = false;
   }
   
   for (var i = 0; i < r.premises; i++)
@@ -63,18 +66,43 @@ function makeSvg()
   removeSvg();
 
   var tree = document.getElementById('tree');
+
+  var cursor = svg('line');
+  cursor.setAttribute('x1', 0);
+  cursor.setAttribute('y1', 0);
+  cursor.setAttribute('x2', 0);
+  cursor.setAttribute('y2', 20);
+  cursor.setAttribute('stroke', 'red');
+  cursor.setAttribute('visibility', 'hidden');
+  cursor.id = 'cursor';
+  tree.appendChild(cursor);
   
   makeSvgFor(root);
+}
+
+function deselect()
+{
+  document.getElementById('cursor').setAttribute('visibility', 'hidden');
+  if (selectedNode != undefined) selectedNode.needsRedraw = true;
+  selectedNode = undefined;
+  restartAnimation();
+}
+
+function clickBackground()
+{
+  deselect();
+  restartAnimation();
 }
 
 function clickRect(event)
 {
   var node = event.target.modelNode;
-  if (node.text == undefined)
-  {
-    node.text = '';
-    restartAnimation();
-  }
+  event.stopPropagation();
+
+  deselect();
+  selectedNode = node;
+  node.needsRedraw = true;
+  restartAnimation();
 }
 
 function hoverRect(event)
@@ -91,6 +119,38 @@ function unhoverRect(event)
   restartAnimation();
 }
 
+function keyDown(event)
+{
+  if (event.keyCode == 8)
+  {
+    event.preventDefault();
+    keyPress(event);
+  }
+}
+
+function keyPress(event)
+{
+  if (selectedNode == undefined) return;
+
+  var key;
+  if (event.key)
+  {
+    if (event.key.length == 1)
+      key = event.key;
+    else
+      key = '';
+  }
+  else
+    key = String.fromCharCode(event.keyCode);
+ 
+  if (event.key == 'Backspace' || key == String.fromCharCode(8))
+    selectedNode.text = selectedNode.text.substr(0,selectedNode.text.length-1);
+  else
+    selectedNode.text += key;
+  selectedNode.needsRedraw = true;
+  restartAnimation();
+}
+
 function rgb(r,g,b)
 {
   return 'rgb(' + Math.floor(255 * r) + ',' + Math.floor(255 * g) + ',' + Math.floor(255 * b) + ')';
@@ -102,28 +162,52 @@ function redoSvgFor(r)
   var text = r.svg_text;
   if (rect == undefined) return;
   if (text == undefined) return;
+  var x = 200;
+  var y = 100;
 
   var hw = 60 + 60 * r.complete;
-  rect.setAttribute('x', 200 - hw);
-  rect.setAttribute('y', 40);
+  var hh = 60;
+  rect.setAttribute('x', x - hw);
+  rect.setAttribute('y', y - hh);
   rect.setAttribute('width', 2 * hw);
-  rect.setAttribute('height', 120);
-  rect.setAttribute('rx', 60 - 50 * r.complete);
-  rect.setAttribute('ry', 60 - 50 * r.complete);
+  rect.setAttribute('height', 2 * hh);
+  rect.setAttribute('rx', hh - 50 * r.complete);
+  rect.setAttribute('ry', hh - 50 * r.complete);
   rect.setAttribute('fill', 'white');
   rect.setAttribute('stroke', 'blue');
   rect.setAttribute('stroke-width', '4px');
-  if (r.text == undefined && r.complete == 0.0)
+  if (r.text == '' && r.complete == 0.0)
     rect.setAttribute('stroke-dasharray', '16px, 16px');
   else
     rect.removeAttribute('stroke-dasharray');
 
-  text.textContent = '?';
-  text.setAttribute('fill', rgb(r.complete, r.complete, r.complete));
+  if (r.text == '' && r.complete < 1.0)
+  {
+    text.setAttribute('fill', rgb(r.complete, r.complete, r.complete));
+    text.textContent = '?';
+  }
+  else
+  {
+    text.setAttribute('fill', rgb(0,0,0));
+    text.textContent = r.text;
+  }
+  text.setAttribute('x', x);
+  text.setAttribute('y', y);
+
+  if (r == selectedNode)
+  {
+    var cursor = document.getElementById('cursor');
+    cursor.setAttribute('x1', x);
+    cursor.setAttribute('y1', y - 10);
+    cursor.setAttribute('x2', x);
+    cursor.setAttribute('y2', y + 10);
+    cursor.setAttribute('visibility', 'visible');
+  }
 }
 
 function makeSvgFor(r)
 {
+  var cursor = document.getElementById('cursor');
   var rect = svg('rect');
   r.svg_rect = rect;
   rect.setAttribute('cursor', 'text');
@@ -131,12 +215,10 @@ function makeSvgFor(r)
   rect.addEventListener('mouseover', hoverRect);
   rect.addEventListener('mouseout', unhoverRect);
   rect.modelNode = r;
-  tree.appendChild(rect);
+  tree.insertBefore(rect, cursor);
 
   var text = svg('text');
   r.svg_text = text;
-  text.setAttribute('x', 200);
-  text.setAttribute('y', 100);
   text.setAttribute('text-anchor', 'middle');
   text.setAttribute('dominant-baseline', 'middle');
   text.setAttribute('font-size', '30');
@@ -144,7 +226,7 @@ function makeSvgFor(r)
   text.addEventListener('mouseover', hoverRect);
   text.addEventListener('mouseout', unhoverRect);
   text.modelNode = r;
-  tree.appendChild(text);
+  tree.insertBefore(text, cursor);
 
   redoSvgFor(r);
 }
@@ -170,7 +252,7 @@ function restartAnimation()
 function closeGoal(e)
 {
   e.stopPropagation();
-  current.text = undefined;
+  current.text = '';
   makeBoxes();
 }
 

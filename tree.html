@@ -6,8 +6,8 @@
   <script src="logic.js" language="JavaScript"></script>
   <script src="tree.js" language="JavaScript"></script>
 </head>
-<body onload="makeSvg()">
-  <svg id="tree" width="500" height="300">
+<body onload="makeSvg()" onkeypress="keyPress(event)" onkeydown="keyDown(event)">
+  <svg id="tree" width="500" height="300" onclick="clickBackground()">
   </svg>
 </body>
 </html>
