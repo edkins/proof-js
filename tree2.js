@@ -100,6 +100,53 @@ function makeContents(node)
   }
 }
 
+function joinOp(op, op2)
+{
+  if (op == '=') return op2;
+  if (op2 == '=') return op;
+
+  if (op == '<' && op2 == '<') return '<';
+  if (op == '<' && op2 == '<=') return '<';
+  if (op == '<=' && op2 == '<') return '<';
+  if (op == '<=' && op2 == '<=') return '<=';
+  if (op == '>' && op2 == '>') return '>';
+  if (op == '>' && op2 == '>=') return '>';
+  if (op == '>=' && op2 == '>') return '>';
+  if (op == '>=' && op2 == '>=') return '>=';
+
+  throw "Cannot join operators " + op + " and " + op2;
+}
+
+function joinContents(node)
+{
+  var lhs;
+  var op;
+  var rhs;
+  if (node.contents.length % 2 != 1) throw "Expecting odd number of nodes";
+
+  if (node.contents[0].type != 'term') throw "Expecting node 0 to be a term";
+  lhs = node.contents[0].text;
+
+  for (var i = 1; i < node.contents.length; i+=2)
+  {
+    if (node.contents[i].type != 'op') throw "Expecting node " + i + " to be an op";
+    var op2 = node.contents[i].text;
+
+    if (node.contents[i+1].type != 'term') throw "Expecting node " + (i+1) + " to be a term";
+    var rhs = node.contents[i+1].text;
+
+    if (op == undefined)
+      op = op2
+    else
+      op = joinOp(op, op2);
+  }
+
+  if (op == undefined)
+    node.text = lhs;
+  else
+    node.text = lhs + ' ' + op + ' ' + rhs;
+}
+
 function canSplit()
 {
   return view.type == 'op';
@@ -156,6 +203,11 @@ function zoomOut()
   if (view == root) { alert('Already at root level'); return; }
 
   view = getParent(view);
+  try {
+    joinContents(view);
+  } catch (e) {
+    alert(e); return;
+  }
   makeBoxes();
 }
 
@@ -187,7 +239,7 @@ function right()
 
 function onChange(event)
 {
-  view.text = event.target.textContent.trim();
+  event.target.modelNode.text = event.target.textContent.trim();
 }
 
 function makeBoxes()
@@ -206,6 +258,7 @@ function makeBoxes()
     var h = (node.type == 'op') ? 50 : 100;
     var y = 200 - h/2;
 
+    box.modelNode = node;
     box.className = (node == view) ? 'box-selected' : 'box';
     box.contentEditable = true;
     box.style.left = x;

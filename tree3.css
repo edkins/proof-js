@@ -1,0 +1,19 @@
+span.field0 {
+  color: blue;
+}
+span.field1 {
+  color: green;
+}
+span.field2{
+  color: red;
+}
+span.var {
+  color: grey;
+}
+div.box {
+  position: absolute;
+  border: solid black 3px;
+  border-radius: 10px;
+  padding: 5px;
+  text-align: center;
+}
