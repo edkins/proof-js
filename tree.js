@@ -1,24 +1,22 @@
 var animating = false;
 
-function Deduction(text, vars, premises, x, y, isRuleSuggestion, isContainer)
+function Deduction(text, vars, premises, x, y, rel)
 {
   this.text = text;
   this.vars = vars;
   this.premises = premises;
-  if (this.text == '')
-    this.complete = 0.0;
-  else
-    this.complete = 1.0;
+  this.complete = (this.text == '') ? 0.0 : 1.0;
+  this.visibility = (rel == 'suggested_rule') ? 0.0 : 1.0;
+  
   this.hover = false;
   this.x = x;
   this.y = y;
-  this.isRuleSuggestion = isRuleSuggestion;
-  this.isContainer = isContainer;
+  this.rel = rel;
   this.svg_rect = undefined;
   this.svg_text = undefined;
 }
 
-var root = new Deduction('', [], [], 500, 300, false, false);
+var root = new Deduction('', [], [], 500, 100, 'premise');
 var current = root;
 var selectedNode = undefined;
 
@@ -36,6 +34,20 @@ function animateSvg(r)
     r.complete = Math.min(1.0, r.complete + 0.125);
     changed = true;
   }
+  
+  var parent = getParent(r);
+  var vis = r.rel != 'suggested_rule' || parent == undefined || parent.hover || parent == selectedNode;
+  if (!vis && r.visibility > 0.0)
+  {
+    r.visibility = Math.max(0.0, r.visibility - 0.125);
+    changed = true;
+  }
+  if (vis && r.visibility < 1.0)
+  {
+    r.visibility = Math.min(1.0, r.visibility + 0.125);
+    changed = true;
+  }
+
   if (r.needsRedraw) changed = true;
 
   if (changed)
@@ -115,51 +127,88 @@ function getParent(node)
   return getParentRecursive(root, node);
 }
 
+function deleteChildren(parent)
+{
+  while (parent.premises.length > 0)
+  {
+    deleteChildren(parent.premises[0]);
+    deleteSvgFor(parent.premises[0]);
+    parent.premises.splice(0,1);
+  }
+}
+
+function deleteSuggestions(parent)
+{
+  for (var i = 0; i < parent.premises.length; i++)
+  {
+    if (parent.premises[i].rel == 'suggested_rule' || parent.premises[i].text == '')
+    {
+      deleteChildren(parent.premises[i]);
+      deleteSvgFor(parent.premises[i]);
+      parent.premises.splice(i,1);
+      i--;
+    }
+  }
+}
+
+function newProposition(parent, text, x, y, type)
+{
+  if (type != 'goal' && type != 'premise') throw 'newProposition: Bad type';
+  var node = new Deduction(text, [], [], x, y, type);
+  parent.premises.push(node);
+  makeSvgFor(node);
+  addBlankPremise(node);
+  return node;
+}
+
+function applyRule(parent, rule)
+{
+  var goal = parent.text;
+  try {
+    var children = applyRuleBackwards(rule, goal, []);
+  } catch(e) {
+    alert(e);
+    return;
+  }
+  deleteChildren(parent);
+  for (var i = 0; i < children.length; i++)
+  {
+    var child;
+    var cx = parent.x + (i - (children.length - 1) * 0.5) * 300
+    var cy = parent.y + 150
+    if (children[i] instanceof Container)
+    {
+      child = new Deduction('Fix '+children[i].vars, [], [], cx, cy, 'container');
+      makeSvgFor(child);
+
+      var subgoal = newProposition(child, children[i].goal, cx, cy + 20, 'goal');
+
+      parent.premises.push(child);
+
+      for (var j = 0; j < children[i].premises.length; j++)
+      {
+        premise = new Deduction(children[i].premises[j], [], [], cx, cy + 400, 'hypothesis');
+        child.premises.push(premise);
+        makeSvgFor(premise);
+      }
+    }
+    else
+    {
+      child = newProposition(parent, children[i], cx, cy, 'premise');
+    }
+  }
+}
+
 function clickRect(event)
 {
   var node = event.target.modelNode;
   event.stopPropagation();
 
-  if (node.isRuleSuggestion)
+  if (node.rel == 'suggested_rule')
   {
-    var parent = getParent(node);
+    var parent = getParent(getParent(node));
     var rule = node.text;
-    var goal = parent.text;
-    for (var i = 0; i < parent.premises.length; i++)
-    {
-      if (parent.premises[i].isRuleSuggestion)
-      {
-        deleteSvgFor(parent.premises[i]);
-        parent.premises.splice(i,1);
-        i--;
-      }
-    }
-    var children = applyRuleBackwards(rule, goal, []);
-    for (var i = 0; i < children.length; i++)
-    {
-      var child;
-      var cx = parent.x + (i - (children.length - 1) * 0.5) * 300
-      var cy = parent.y + 150
-      if (children[i] instanceof Container)
-      {
-        child = new Deduction(children[i].goal, [], [], cx, cy, false, true);
-        parent.premises.push(child);
-        makeSvgFor(child);
-
-        for (var j = 0; j < children[i].premises.length; j++)
-        {
-          premise = new Deduction(children[i].premises[j], [], [], cx, cy + 150, false, false);
-          child.premises.push(premise);
-          makeSvgFor(premise);
-        }
-      }
-      else
-      {
-        child = new Deduction(children[i], [], [], cx, cy, false, false);
-        parent.premises.push(child);
-        makeSvgFor(child);
-      }
-    }
+    applyRule(parent, rule);
   }
   else
   {
@@ -174,6 +223,10 @@ function hoverRect(event)
 {
   var node = event.target.modelNode;
   node.hover = true;
+  if (node.rel == 'suggested_rule')
+  {
+    getParent(node).hover = true;
+  }
   restartAnimation();
 }
 
@@ -181,6 +234,10 @@ function unhoverRect(event)
 {
   var node = event.target.modelNode;
   node.hover = false;
+  if (node.rel == 'suggested_rule')
+  {
+    getParent(node).hover = false;
+  }
   restartAnimation();
 }
 
@@ -191,6 +248,29 @@ function keyDown(event)
     event.preventDefault();
     keyPress(event);
   }
+}
+
+function addRuleSuggestions(node, premise)
+{
+  var rules = suggestRules(node.text,[]);
+
+  for (var i = 0; i < rules.length; i++)
+  {
+    var x = premise.x - 50 + 100 * (i % 2);
+    var y = premise.y - 30 + 30 * Math.floor(i / 2);
+    var child = new Deduction(rules[i],[],[], x, y, 'suggested_rule');
+    makeSvgFor(child);
+    premise.premises.push(child);
+  }
+}
+
+function addBlankPremise(node)
+{
+  var premise = new Deduction('',[],[],node.x, node.y + 130, 'premise');
+  node.premises.push(premise);
+  makeSvgFor(premise);
+
+  addRuleSuggestions(node, premise);
 }
 
 function keyPress(event)
@@ -214,43 +294,30 @@ function keyPress(event)
     selectedNode.text += key;
   selectedNode.needsRedraw = true;
 
-  if (selectedNode == root && selectedNode.text != '')
+  if (selectedNode.rel == 'premise' || selectedNode.rel == 'goal')
   {
-    root = new Deduction('',[],[selectedNode],selectedNode.x,selectedNode.y - 130, false, false);
-    makeSvgFor(root);
-  }
-
-  if (selectedNode.text != '')
-  {
-    var child = new Deduction('induction',[],[],selectedNode.x - 150, selectedNode.y + 110, true, false);
-    makeSvgFor(child);
-    selectedNode.premises.push(child);
-
-    child = new Deduction('transitivity',[],[],selectedNode.x + 150, selectedNode.y + 110, true, false);
-    makeSvgFor(child);
-    selectedNode.premises.push(child);
-  }
-
-  if (selectedNode.text == '')
-  {
-    for (var i = 0; i < selectedNode.premises.length; i++)
+    /*if (selectedNode == root && selectedNode.text != '')
     {
-      if (selectedNode.premises[i].isRuleSuggestion)
+      root = new Deduction('',[],[selectedNode],selectedNode.x,selectedNode.y - 130, 'premise');
+      makeSvgFor(root);
+    }*/
+
+    deleteSuggestions(selectedNode);
+
+    if (selectedNode.text != '' && selectedNode.premises.length == 0)
+    {
+      addBlankPremise(selectedNode);
+    }
+
+    /*if (root.text == '')
+    {
+      if (root.premises.length == 1 && root.premises[0] == selectedNode && selectedNode.text == '')
       {
-        deleteSvgFor(selectedNode.premises[i]);
-        selectedNode.premises.splice(i,1);
-        i--;
+        deleteSvgFor(root);
+        if (current == root) current = selectedNode;
+        root = selectedNode;
       }
-    }
-  }
-  if (root.text == '')
-  {
-    if (root.premises.length == 1 && root.premises[0] == selectedNode && selectedNode.text == '')
-    {
-      deleteSvgFor(root);
-      if (current == root) current = selectedNode;
-      root = selectedNode;
-    }
+    }*/
   }
 
   restartAnimation();
@@ -271,22 +338,59 @@ function redoSvgFor(r)
   var y = r.y;
   if (r.x == undefined || r.y == undefined) return;
 
-  var hw = 60 + 60 * r.complete;
-  var hh = r.isRuleSuggestion ? 30 : 60;
-  var radius = r.isRuleSuggestion ? 0.0 : r.complete;
+  var hw, hh, radius, dashes, color, textx = 0, texty = 0, textsize = 30, textcolor = undefined;
+  var strokewidth = 4, visibility = 'visible';
+  if (r.rel == 'suggested_rule')
+  {
+    hw = 40;
+    hh = 15;
+    radius = hh;
+    dashes = true;
+    color = rgb(1-r.visibility, 1-r.visibility, 1);
+    textcolor = rgb(1-r.visibility, 1-r.visibility, 1-r.visibility);
+    textsize = 15;
+    strokewidth = 1;
+    visibility = (r.visibility > 0.0) ? 'visible' : 'hidden';
+  }
+  else if (r.rel == 'container')
+  {
+    hw = 150;
+    hh = 280;
+    y += 210;
+    textx -= 0;
+    texty -= 262;
+    textsize = 20;
+    color = textcolor = rgb(0.5,1,0.5);
+    radius = 30.0;
+    dashes = false;
+  }
+  else
+  {
+    hw = 60 + 60 * r.complete;
+    hh = 60;
+    radius = hh - 50 * r.complete;
+    dashes = (r.text == '' && r.complete == 0.0);
+    if (r.rel == 'premise' || r.rel == 'goal')
+      color = 'blue';
+    else if (r.rel == 'hypothesis')
+      color = 'purple';
+    else
+      color = 'red';
+  }
   rect.setAttribute('x', x - hw);
   rect.setAttribute('y', y - hh);
   rect.setAttribute('width', 2 * hw);
   rect.setAttribute('height', 2 * hh);
-  rect.setAttribute('rx', hh - 50 * radius);
-  rect.setAttribute('ry', hh - 50 * radius);
+  rect.setAttribute('rx', radius);
+  rect.setAttribute('ry', radius);
   rect.setAttribute('fill', 'white');
-  rect.setAttribute('stroke', 'blue');
-  rect.setAttribute('stroke-width', '4px');
-  if ((r.text == '' && r.complete == 0.0) || r.isRuleSuggestion)
+  rect.setAttribute('stroke', color);
+  rect.setAttribute('stroke-width', strokewidth);
+  if (dashes)
     rect.setAttribute('stroke-dasharray', '16px, 16px');
   else
     rect.removeAttribute('stroke-dasharray');
+  rect.setAttribute('visibility', visibility);
 
   if (r.text == '' && r.complete < 1.0)
   {
@@ -295,17 +399,19 @@ function redoSvgFor(r)
   }
   else
   {
-    text.setAttribute('fill', rgb(0,0,0));
+    text.setAttribute('fill', textcolor ? textcolor : rgb(0,0,0));
     text.textContent = r.text;
   }
-  text.setAttribute('x', x);
-  text.setAttribute('y', y);
+  text.setAttribute('x', x + textx);
+  text.setAttribute('y', y + texty);
+  text.setAttribute('font-size', textsize);
+  text.setAttribute('visibility', visibility);
 
   if (r == selectedNode)
   {
     var cursor = document.getElementById('cursor');
-    var cx = x + text.getComputedTextLength() / 2;
-    var cy = y;
+    var cx = x + textx + text.getComputedTextLength() / 2;
+    var cy = y + texty;
     if (r.text.substr(r.text.length-1,1) == ' ') cx += 8;
     cursor.setAttribute('x1', cx);
     cursor.setAttribute('y1', cy - 20);
@@ -332,7 +438,10 @@ function makeSvgFor(r)
   var cursor = document.getElementById('cursor');
   var rect = svg('rect');
   r.svg_rect = rect;
-  rect.setAttribute('cursor', 'text');
+  if (r.rel == 'suggested_rule')
+    rect.setAttribute('cursor', 'pointer');
+  else
+    rect.setAttribute('cursor', 'text');
   rect.addEventListener('click', clickRect);
   rect.addEventListener('mouseover', hoverRect);
   rect.addEventListener('mouseout', unhoverRect);
@@ -343,8 +452,8 @@ function makeSvgFor(r)
   r.svg_text = text;
   text.setAttribute('text-anchor', 'middle');
   text.setAttribute('dominant-baseline', 'middle');
-  text.setAttribute('font-size', '30');
   text.setAttribute('font-family', 'sans-serif');
+  text.addEventListener('click', clickRect);
   text.addEventListener('mouseover', hoverRect);
   text.addEventListener('mouseout', unhoverRect);
   text.modelNode = r;
@@ -370,298 +479,3 @@ function restartAnimation()
     window.setTimeout(animTimeout, 0.02);
   }
 }
-
-function closeGoal(e)
-{
-  e.stopPropagation();
-  current.text = '';
-  makeBoxes();
-}
-
-function closePremise(e)
-{
-  e.stopPropagation();
-  var dom = e.target;
-  while (dom.className != 'box') dom = dom.parentNode;
-  var index = dom.dataset.index;
-  current.premises.splice(index,1);
-  makeBoxes();
-}
-
-function refreshButtonsFor(el, any)
-{
-  var buttons = el.getElementsByTagName('*');
-  for (var i = 0; i < buttons.length; i++)
-  {
-    if (buttons[i].dataset.vis == 'vanish')
-    {
-      if (any)
-        buttons[i].style.display = 'none';
-      else
-        buttons[i].style.removeProperty('display');
-    }
-    if (buttons[i].dataset.vis == 'appear')
-    {
-      if (any)
-        buttons[i].style.removeProperty('display');
-      else
-        buttons[i].style.display = 'none';
-    }
-  }
-}
-
-function refreshButtons()
-{
-  var any = (current.text != undefined);
-  refreshButtonsFor(document.getElementById('goal'), any);
-
-  any = (current.premises.length > 0);
-  refreshButtonsFor(document.getElementById('premises'), any);
-}
-
-function refreshAnnotations()
-{
-  var fixed_vars = [];
-  var common = {};
-
-  for (var i = 0; i < current.vars.length; i++)
-  {
-    var x = current.vars[i];
-    for (var j = 0; j < current.premises.length; j++)
-    {
-      var premise = current.premises[j];
-      for (var k = 0; k < premise.vars.length; k++)
-      {
-        if (premise.vars[k] == x)
-          common[x] = true;
-      }
-    }
-  }
-
-  var boxes = document.getElementsByClassName('box');
-  for (var i = 0; i < boxes.length; i++)
-  {
-    var box = boxes[i];
-    var edit = box.getElementsByClassName('edit')[0];
-    var title = box.getElementsByClassName('title')[0];
-
-    try {
-      var ast = parser(edit.textContent.trim());
-      var vars = list_free_variables(ast, common);
-      if (vars.length == 0)
-        title.textContent = '';
-      else
-        title.textContent = 'for all ' + vars;
-    } catch (e) {
-      title.textContent = '?';
-    }
-  }
-
-  var vars = Object.keys(common);
-  vars.sort();
-  var title = document.getElementById('fixed');
-  title.textContent = '' + vars;
-}
-
-function newBox(el, text, type, index)
-{
-  var buttons = el.getElementsByTagName('*');
-  var generator = undefined;
-  for (var i = 0; i < buttons.length; i++)
-  {
-    if (buttons[i].dataset.generate == 'true')
-      generator = buttons[i];
-  }
-
-  var box = document.createElement('div');
-  box.className = 'box';
-  box.dataset.isbox = 'true';
-  box.dataset.index = index;
-
-  var titlebar = document.createElement('div');
-  titlebar.textContent = '';
-  titlebar.className = 'titlebar';
-  titlebar.addEventListener('click', (type == 'goal') ? targetGoal : targetPremise);
-
-  var close = document.createElement('button');
-  close.textContent = 'X';
-  close.className = 'close';
-  close.addEventListener('click', (type == 'goal') ? closeGoal : closePremise);
-  titlebar.appendChild(close);
-
-  var title = document.createElement('span');
-  title.name = 'title';
-  title.className = 'title';
-  titlebar.appendChild(title);
-
-  box.appendChild(titlebar);
-
-  var edit = document.createElement('div');
-  edit.className = 'edit';
-  edit.contentEditable = true;
-  edit.addEventListener('keyup', onKeyUp);
-  edit.textContent = text;
-  box.appendChild(edit);
-
-  el.insertBefore(box, generator);
-
-  refreshButtons();
-}
-
-function newPremiseBox(text, index)
-{
-  var el = document.getElementById('premises');
-  newBox(el, text, 'premise', index);
-}
-
-function newGoalBox(text)
-{
-  var el = document.getElementById('goal');
-  newBox(el, text, 'goal', undefined);
-}
-
-function removeBoxes()
-{
-  while (true)
-  {
-    var boxes = document.getElementsByClassName('box');
-    if (boxes.length == 0) return;
-    boxes[0].parentNode.removeChild(boxes[0]);
-  }
-}
-
-function makeBoxes()
-{
-  removeBoxes();
-  if (current.text != undefined) newGoalBox(current.text);
-  for (var i = 0; i < current.premises.length; i++)
-  {
-    newPremiseBox(current.premises[i].text, i);
-  }
-  refreshButtons();
-  refreshAnnotations();
-}
-
-function getGoal()
-{
-  var el = document.getElementById('goal');
-  var box = el.getElementsByClassName('box')[0];
-  if (box == undefined) return undefined;
-
-  return box.getElementsByClassName('edit')[0].textContent;
-}
-
-function getFreeVars(text)
-{
-  try {
-    var ast = parser(text);
-    return list_free_variables(ast, {});
-  } catch(e) {
-    return [];
-  }
-}
-
-function setModelText()
-{
-  current.text = getGoal();
-  current.vars = getFreeVars(current.text);
-  var premiseBoxes = document.getElementById('premises').getElementsByClassName('box');
-  if (premiseBoxes.length != current.premises.length) throw "Wrong number of premises in model";
-
-  for (var i = 0; i < current.premises.length; i++)
-  {
-    var text = premiseBoxes[i].getElementsByClassName('edit')[0].textContent;
-    current.premises[i].text = text;
-    current.premises[i].vars = getFreeVars(text);
-  }
-}
-
-function onKeyUp(event)
-{
-  setModelText();
-  refreshAnnotations();
-}
-
-function newGoal()
-{
-  current.text = '';
-  makeBoxes();
-}
-
-function newPremise(text)
-{
-  current.premises.push(new Deduction(text, [], []));
-  makeBoxes();
-}
-
-function rule(r)
-{
-  var goal = getGoal();
-  if (goal == undefined) return;
-
-  var fixed_vars = getFixedVars();
-  try
-  {
-    var premises = applyRuleBackwards(r, goal, fixed_vars);
-    for (var i = 0; i < premises.length; i++)
-    {
-      newPremise(premises[i]);
-    }
-  } catch (e) {
-    alert(e);
-  } finally {
-    makeBoxes();
-  }
-}
-
-function findNode(dom)
-{
-  while (dom.className != 'box') dom = dom.parentNode;
-
-  if (dom.dataset.index == undefined) return current;
-  return current.premises[parseInt(dom.dataset.index)];
-}
-
-function setCurrent(node)
-{
-  current = node;
-  makeBoxes();
-}
-
-function setPremise(r, node)
-{
-  for (var i = 0; i < r.premises.length; i++)
-  {
-    if (r.premises[i] == node)
-    {
-      current = r;
-      return true;
-    }
-    else
-    {
-      if (setPremise(r.premises[i], node)) return true;
-    }
-  }
-  return false;
-}
-
-function targetGoal(e)
-{
-  if (current == root)
-  {
-    root = new Deduction(undefined, [], [current]);
-    current = root;
-  }
-  else
-  {
-    setPremise(root, current);
-  }
-  makeBoxes();
-}
-
-function targetPremise(e)
-{
-  current = findNode(e.target);
-  makeBoxes();
-}
-

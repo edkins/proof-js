@@ -96,6 +96,59 @@ function Container(vars, premises, goal)
   this.goal = goal;
 }
 
+function isTransitive(op)
+{
+  return op == '=' || op == '<' || op == '<=' || op == '>' || op == '>=';
+}
+
+function isReflexive(op)
+{
+  return op == '=' || op == '<=' || op == '>=';
+}
+
+function suggestRules(goal, fixed_vars)
+{
+  var result = [];
+  try
+  {
+    var ast = parser(goal);
+  } catch (e) {
+    return [];
+  }
+
+  var free_vars = list_free_variables(ast, fixed_vars);
+
+  if (free_vars.length == 1)
+    result.push('induction');
+
+  if (ast.type == 'tree' && isTransitive(ast.op))
+    result.push('transitive');
+
+  if (ast.type == 'tree' && isReflexive(ast.op))
+    result.push('reflexive');
+
+  if (ast.type == 'tree' && ast.lhs.type == 'tree' && ast.lhs.op == '+' && ast.lhs.lhs.type == 'number' && ast.lhs.lhs.number == 0)
+    result.push('0+');
+
+  return result;
+}
+
+function deepEqual(lhs, rhs)
+{
+  if (lhs.type != rhs.type) return false;
+
+  if (lhs.type == 'name')
+    return lhs.name == rhs.name;
+  else if (lhs.type == 'number')
+    return lhs.number == rhs.number;
+  else if (lhs.type == 'quoted')
+    return lhs.quoted == rhs.quoted;
+  else if (lhs.type == 'tree')
+    return lhs.op == rhs.op && deepEqual(lhs.lhs, rhs.lhs) && deepEqual(lhs.rhs, rhs.rhs);
+  else
+    throw "Unrecognized AST node: " + lhs.type;
+}
+
 function applyRuleBackwards(rule, goal, fixed_vars)
 {
   var ast = parser(goal);
@@ -113,6 +166,13 @@ function applyRuleBackwards(rule, goal, fixed_vars)
     var ast_iH = binop('->', ast_n, ast_S);
 
     return [ast_str(ast_0), new Container([n.name], [ast_str(ast_n)], ast_str(ast_S))];
+  }
+  else if (rule == 'reflexive')
+  {
+    if (ast.type == 'tree' && isReflexive(ast.op) && deepEqual(ast.lhs, ast.rhs))
+      return [];
+    else
+      throw 'LHS and RHS not identical';
   }
   else
   {
