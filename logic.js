@@ -89,6 +89,13 @@ function fresh_variable(ast, bound)
   throw "Can't think of a variable name";
 }
 
+function Container(vars, premises, goal)
+{
+  this.vars = vars;
+  this.premises = premises;
+  this.goal = goal;
+}
+
 function applyRuleBackwards(rule, goal, fixed_vars)
 {
   var ast = parser(goal);
@@ -105,7 +112,7 @@ function applyRuleBackwards(rule, goal, fixed_vars)
     var ast_S = subst(ast, ind_var, Sn);
     var ast_iH = binop('->', ast_n, ast_S);
 
-    return [ast_str(ast_0), ast_str(ast_iH)];
+    return [ast_str(ast_0), new Container([n.name], [ast_str(ast_n)], ast_str(ast_S))];
   }
   else
   {

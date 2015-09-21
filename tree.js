@@ -1,6 +1,6 @@
 var animating = false;
 
-function Deduction(text, vars, premises, x, y)
+function Deduction(text, vars, premises, x, y, isRuleSuggestion, isContainer)
 {
   this.text = text;
   this.vars = vars;
@@ -12,11 +12,13 @@ function Deduction(text, vars, premises, x, y)
   this.hover = false;
   this.x = x;
   this.y = y;
+  this.isRuleSuggestion = isRuleSuggestion;
+  this.isContainer = isContainer;
   this.svg_rect = undefined;
   this.svg_text = undefined;
 }
 
-var root = new Deduction('', [], [], 500, 300);
+var root = new Deduction('', [], [], 500, 300, false, false);
 var current = root;
 var selectedNode = undefined;
 
@@ -96,14 +98,75 @@ function clickBackground()
   restartAnimation();
 }
 
+function getParentRecursive(r, node)
+{
+  for (var i = 0; i < r.premises.length; i++)
+  {
+    if (r.premises[i] == node)
+      return r;
+    var result = getParentRecursive(r.premises[i], node);
+    if (result != undefined) return result;
+  }
+  return undefined;
+}
+
+function getParent(node)
+{
+  return getParentRecursive(root, node);
+}
+
 function clickRect(event)
 {
   var node = event.target.modelNode;
   event.stopPropagation();
 
-  deselect();
-  selectedNode = node;
-  node.needsRedraw = true;
+  if (node.isRuleSuggestion)
+  {
+    var parent = getParent(node);
+    var rule = node.text;
+    var goal = parent.text;
+    for (var i = 0; i < parent.premises.length; i++)
+    {
+      if (parent.premises[i].isRuleSuggestion)
+      {
+        deleteSvgFor(parent.premises[i]);
+        parent.premises.splice(i,1);
+        i--;
+      }
+    }
+    var children = applyRuleBackwards(rule, goal, []);
+    for (var i = 0; i < children.length; i++)
+    {
+      var child;
+      var cx = parent.x + (i - (children.length - 1) * 0.5) * 300
+      var cy = parent.y + 150
+      if (children[i] instanceof Container)
+      {
+        child = new Deduction(children[i].goal, [], [], cx, cy, false, true);
+        parent.premises.push(child);
+        makeSvgFor(child);
+
+        for (var j = 0; j < children[i].premises.length; j++)
+        {
+          premise = new Deduction(children[i].premises[j], [], [], cx, cy + 150, false, false);
+          child.premises.push(premise);
+          makeSvgFor(premise);
+        }
+      }
+      else
+      {
+        child = new Deduction(children[i], [], [], cx, cy, false, false);
+        parent.premises.push(child);
+        makeSvgFor(child);
+      }
+    }
+  }
+  else
+  {
+    deselect();
+    selectedNode = node;
+    node.needsRedraw = true;
+  }
   restartAnimation();
 }
 
@@ -153,8 +216,41 @@ function keyPress(event)
 
   if (selectedNode == root && selectedNode.text != '')
   {
-    root = new Deduction('',[],[selectedNode],selectedNode.x,selectedNode.y - 130);
+    root = new Deduction('',[],[selectedNode],selectedNode.x,selectedNode.y - 130, false, false);
     makeSvgFor(root);
+  }
+
+  if (selectedNode.text != '')
+  {
+    var child = new Deduction('induction',[],[],selectedNode.x - 150, selectedNode.y + 110, true, false);
+    makeSvgFor(child);
+    selectedNode.premises.push(child);
+
+    child = new Deduction('transitivity',[],[],selectedNode.x + 150, selectedNode.y + 110, true, false);
+    makeSvgFor(child);
+    selectedNode.premises.push(child);
+  }
+
+  if (selectedNode.text == '')
+  {
+    for (var i = 0; i < selectedNode.premises.length; i++)
+    {
+      if (selectedNode.premises[i].isRuleSuggestion)
+      {
+        deleteSvgFor(selectedNode.premises[i]);
+        selectedNode.premises.splice(i,1);
+        i--;
+      }
+    }
+  }
+  if (root.text == '')
+  {
+    if (root.premises.length == 1 && root.premises[0] == selectedNode && selectedNode.text == '')
+    {
+      deleteSvgFor(root);
+      if (current == root) current = selectedNode;
+      root = selectedNode;
+    }
   }
 
   restartAnimation();
@@ -176,17 +272,18 @@ function redoSvgFor(r)
   if (r.x == undefined || r.y == undefined) return;
 
   var hw = 60 + 60 * r.complete;
-  var hh = 60;
+  var hh = r.isRuleSuggestion ? 30 : 60;
+  var radius = r.isRuleSuggestion ? 0.0 : r.complete;
   rect.setAttribute('x', x - hw);
   rect.setAttribute('y', y - hh);
   rect.setAttribute('width', 2 * hw);
   rect.setAttribute('height', 2 * hh);
-  rect.setAttribute('rx', hh - 50 * r.complete);
-  rect.setAttribute('ry', hh - 50 * r.complete);
+  rect.setAttribute('rx', hh - 50 * radius);
+  rect.setAttribute('ry', hh - 50 * radius);
   rect.setAttribute('fill', 'white');
   rect.setAttribute('stroke', 'blue');
   rect.setAttribute('stroke-width', '4px');
-  if (r.text == '' && r.complete == 0.0)
+  if ((r.text == '' && r.complete == 0.0) || r.isRuleSuggestion)
     rect.setAttribute('stroke-dasharray', '16px, 16px');
   else
     rect.removeAttribute('stroke-dasharray');
@@ -216,6 +313,18 @@ function redoSvgFor(r)
     cursor.setAttribute('y2', cy + 15);
     cursor.setAttribute('visibility', 'visible');
   }
+}
+
+function deleteSvgFor(r)
+{
+  var rect = r.svg_rect;
+  if (rect == null) return;
+  rect.parentNode.removeChild(rect);
+  r.svg_rect = null;
+
+  var text = r.svg_text;
+  text.parentNode.removeChild(text);
+  r.svg_text = null;
 }
 
 function makeSvgFor(r)
