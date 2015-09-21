@@ -58,7 +58,7 @@ function ast_str(obj, target)
   var level = -1;
   var result;
   if (obj.type == 'name') result = obj.name;
-  else if (obj.type == 'number') result = obj.number;
+  else if (obj.type == 'number') result = '' + obj.number;
   else if (obj.type == 'quoted') result = '"' + obj.str + '"';
   else if (obj.type == 'tree')
   {

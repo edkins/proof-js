@@ -1,0 +1,24 @@
+<html>
+<meta charset="US-ASCII">
+<head>
+  <link rel="stylesheet" type="text/css" href="tree2.css"></link>
+  <script src="parse.js" language="JavaScript"></script>
+  <script src="logic.js" language="JavaScript"></script>
+  <script src="tree2.js" language="JavaScript"></script>
+</head>
+<body onload="init()">
+  <div>
+    <p>
+    <button type="button" id="leftButton" onclick="left()">&lt;&lt;&lt;</button>
+    <button type="button" id="zoomInButton" onclick="zoomIn()">Zoom in</button>
+    <button type="button" id="zoomOutButton" onclick="zoomOut()">Zoom out</button>
+    <button type="button" id="rightButton" onclick="right()">&gt;&gt;&gt;</button>
+    </p>
+    <p>
+    <button type="button" id="splitButton" onclick="split()">Split</button>
+    <button type="button" id="deleteButton" onclick="deleteNode()">Delete</button>
+    </p>
+  </div>
+  <div id="main"></div>
+</body>
+</html>
