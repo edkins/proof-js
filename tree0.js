@@ -236,13 +236,15 @@ function rule(r)
   var goal = getGoal();
   if (goal == undefined) return;
 
-  var fixed_vars = []; //getFixedVars();
+  var fixed_vars = {}; //getFixedVars();
   try
   {
     var premises = applyRuleBackwards(r, goal, fixed_vars);
     for (var i = 0; i < premises.length; i++)
     {
-      newPremise(premises[i]);
+      var text = premises[i];
+      if (text instanceof Container) text = text.toString();
+      newPremise(text);
     }
   } catch (e) {
     alert(e);

@@ -94,6 +94,14 @@ function Container(vars, premises, goal)
   this.vars = vars;
   this.premises = premises;
   this.goal = goal;
+  this.toString = function() {
+    var result = goal;
+    for (var i = 0; i < premises.length; i++)
+    {
+      result = premises[i] + ' -> ' + result;
+    }
+    return result;
+  }
 }
 
 function isTransitive(op)
