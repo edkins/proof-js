@@ -1,0 +1,82 @@
+h2 {
+  font-family: sans-serif;
+  font-size: medium;
+  font-weight: normal;
+}
+body {
+  display: table;
+  width: 100%;
+}
+div.main {
+  text-align: center;
+  vertical-align: top;
+}
+div.fix {
+  background: #ddd;
+  text-align: left;
+  padding: 5px;
+}
+span.fixedit {
+  background: white;
+  padding: 5px;
+}
+div.sidebar {
+  float: right;
+  vertical-align: top;
+  width: 200px;
+  height: 600px;
+}
+div.sidebar button {
+  width: 180px;
+  font-size: large;
+}
+div.sidebar p {
+  margin: 0px;
+}
+optgroup {
+  font-style: normal;
+}
+div.slice {
+  display: inline-block;
+  background: #ddd;
+  padding: 0px 30px 0px 30px;
+}
+div.box {
+  text-align: left;
+  vertical-align: top;
+  background: white;
+  display: inline-block;
+  width:250px;
+  height:130px;
+  margin:10px;
+}
+button.big-new {
+  vertical-align: top;
+  font-family: sans-serif;
+  font-size: 30px;
+  font-weight: bold;
+  color: green;
+  height: 150px;
+  width: 150px;
+}
+button.new {
+  vertical-align: top;
+  font-family: sans-serif;
+  font-size: 30px;
+  font-weight: bold;
+  color: green;
+  height: 150px;
+}
+button.close {
+  color: red;
+  height: 17px;
+  font-size: 10px;
+}
+div.titlebar {
+  background: #008;
+  color: white;
+  cursor: pointer;
+}
+div.edit {
+  height: 100px;
+}

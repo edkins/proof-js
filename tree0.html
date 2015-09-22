@@ -1,0 +1,59 @@
+<html>
+<meta charset="US-ASCII">
+<head>
+  <link rel="stylesheet" type="text/css" href="tree0.css"></link>
+  <script src="parse.js" language="JavaScript"></script>
+  <script src="logic.js" language="JavaScript"></script>
+  <script src="tree0.js" language="JavaScript"></script>
+</head>
+<body>
+  <div class="fix">
+    <p>
+      Fix
+      <span class="fixlist" id="fixed" onkeyup="onKeyUp(event)">
+      </span>
+    </p>
+  </div>
+  <div class="sidebar">
+    <p>
+      <button type="button" onclick="rule('induction')">Induction</button>
+    </p>
+    <p>
+      <button type="button" onclick="rule('plus_0_left')">0 +</button>
+    </p>
+    <p>
+      <button type="button" onclick="rule('plus_S_left')">S x +</button>
+    </p>
+  </div>
+  <div class="main">
+    <p><div class="slice" id="goal">
+      <h2>
+        Proposition to be proved:
+      </h2>
+      <button type="button" class="big-new"
+        data-vis="vanish" 
+        data-generate="true"
+        onclick="newGoal()">
+        +
+      </button>
+    </div></p>
+    <p><div class="slice" id="premises">
+      <h2>
+        Premises:
+      </h2>
+      <button type="button" class="big-new"
+        data-vis="vanish"
+        data-generate="true"
+        onclick="newPremise('')">
+        +
+      </button>
+      <button type="button" class="new"
+        data-vis="appear" style="display:none"
+        data-generate="true"
+        onclick="newPremise('')">
+        +
+      </button>
+    </div></p>
+  </div>
+</body>
+</html>
